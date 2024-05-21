@@ -54,5 +54,6 @@ jobs:
       - name: 'Test the codebase'
         env:
           REDIS_URL: 'redis://localhost:6379'
+          SECRET_KEY: 'deeznut!in!your!face'
           DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/test'
         run: 'bun test --coverage'
