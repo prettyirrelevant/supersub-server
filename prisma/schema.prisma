@@ -1,0 +1,146 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Accounts
+model Account {
+  id                  Int    @id @default(autoincrement())
+  eoaAddress          String @unique
+  emailAddress        String @unique
+  smartAccountAddress String @unique
+  metadata            Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  apiKeys                 ApiKey[]
+  products                Product[]
+  transactions            Transaction[]
+  ownedSubscriptions      Subscription[] @relation("ownedSubscriptions")
+  subscribedSubscriptions Subscription[] @relation("subscribedSubscriptions")
+
+  @@index([smartAccountAddress], type: Hash)
+}
+
+// Products
+model Product {
+  id               Int     @id @default(autoincrement())
+  name             String
+  destinationChain Int
+  onchainReference String  @unique
+  receivingAddress String
+  isActive         Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  creatorAddress String
+  creator        Account @relation(fields: [creatorAddress], references: [smartAccountAddress])
+
+  tokenAddress String
+  token        Token  @relation(fields: [tokenAddress], references: [address])
+
+  plans         Plan[]
+  subscriptions Subscription[]
+}
+
+// Plans
+model Plan {
+  id               Int     @id @default(autoincrement())
+  chargeInterval   Int
+  price            Decimal
+  onchainReference String  @unique
+  isActive         Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  productOnchainReference String
+  product                 Product @relation(fields: [productOnchainReference], references: [onchainReference])
+
+  subscription Subscription[]
+}
+
+// Transaction Types
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  INFORMATIONAL
+}
+
+// Transactions
+model Transaction {
+  id               Int             @id @default(autoincrement())
+  amount           Decimal
+  narration        String
+  recipient        String?
+  type             TransactionType
+  onchainReference String          @unique
+
+  subscriptionOnchainReference String?
+  subscription                 Subscription? @relation(fields: [subscriptionOnchainReference], references: [onchainReference])
+
+  accountAddress String
+  account        Account @relation(fields: [accountAddress], references: [smartAccountAddress])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Subscriptions
+model Subscription {
+  id               Int      @id @default(autoincrement())
+  onchainReference String   @unique
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  creatorAddress String
+  creator        Account @relation(name: "ownedSubscriptions", fields: [creatorAddress], references: [smartAccountAddress])
+
+  planOnchainReference String
+  plan                 Plan   @relation(fields: [planOnchainReference], references: [onchainReference])
+
+  productOnchainReference String
+  product                 Product @relation(fields: [productOnchainReference], references: [onchainReference])
+
+  subscriberAddress String
+  subscriber        Account       @relation(name: "subscribedSubscriptions", fields: [subscriberAddress], references: [smartAccountAddress])
+  Transaction       Transaction[]
+}
+
+// Tokens
+model Token {
+  id       Int    @id @default(autoincrement())
+  address  String @unique
+  decimals Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+}
+
+// API Keys
+model ApiKey {
+  id        Int    @id @default(autoincrement())
+  publicKey String @unique
+  secretKey String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accountAddress String
+  account        Account @relation(fields: [accountAddress], references: [smartAccountAddress])
+}
