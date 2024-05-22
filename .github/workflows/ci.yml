@@ -37,23 +37,26 @@ jobs:
       - name: 'Check out the repo'
         uses: 'actions/checkout@v4'
 
-      - name: 'Install Bun'
-        uses: 'oven-sh/setup-bun@v1'
+      - name: 'Install Node.js'
+        uses: actions/setup-node@v4
+        with:
+          cache: 'npm'
 
       - name: 'Install the dependencies'
-        run: 'bun install'
+        run: 'npm ci'
 
       - name: 'Lint the code'
-        run: 'bun run lint'
+        run: 'npm run lint'
 
       - name: 'Run Prisma migrations'
         env:
           DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/test'
-        run: bunx prisma migrate deploy
+        run: npx prisma migrate deploy
 
       - name: 'Test the codebase'
         env:
           REDIS_URL: 'redis://localhost:6379'
           SECRET_KEY: 'deeznut!in!your!face'
+          LOG_LEVEL: 'info'
           DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/test'
-        run: 'bun test --coverage'
+        run: 'npm test --coverage'

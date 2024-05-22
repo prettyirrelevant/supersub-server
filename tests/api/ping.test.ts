@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { expect, test } from 'vitest';
 import request from 'supertest';
 
 import { application } from '../../src';

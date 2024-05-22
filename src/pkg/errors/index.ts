@@ -4,7 +4,7 @@ import { StatusCodes } from 'http-status-codes';
 import { Prisma } from '@prisma/client';
 import { ZodError } from 'zod';
 
-import { errorResponse } from '../responses';
+import { errorResponse } from '~/pkg/responses';
 
 export class ApiError extends Error {
   readonly status: number;

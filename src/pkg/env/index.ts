@@ -4,6 +4,7 @@ const zEnv = z.object({
   ENVIRONMENT: z.enum(['development', 'production']).default('development'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('debug'),
   DATABASE_URL: z.string().url().min(1),
+  REDIS_URL: z.string().url().min(1),
   PORT: z.number().default(3456),
   SECRET_KEY: z.string().min(1),
 });
@@ -13,4 +14,4 @@ if (!parsedEnv.success) {
   throw new Error(`Unable to parse environment variables ${parsedEnv.error}`);
 }
 
-export default parsedEnv.data;
+export const config = parsedEnv.data;

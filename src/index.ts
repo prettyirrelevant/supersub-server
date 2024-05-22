@@ -1,10 +1,11 @@
 import 'dotenv/config';
 
-import { application, logger } from './app';
-import env from './pkg/env';
+import { config } from '~/pkg/env';
 
-const server = application.listen(env.PORT, () => {
-  logger.debug(`server is running on port ${env.PORT}`);
+import { application, logger } from './app';
+
+const server = application.listen(config.PORT, () => {
+  logger.debug(`server is running on port ${config.PORT}`);
 });
 
 const exitHandler = (): void => {

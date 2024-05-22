@@ -2,7 +2,15 @@ import pino, { type redactOptions } from 'pino';
 
 export type Fields = Record<string, unknown> & Partial<{ err: Error }>;
 
-export type LogLevel = 'trace' | 'debug' | 'error' | 'fatal' | 'info' | 'warn';
+export enum LogLevel {
+  Silent = 'silent',
+  Fatal = 'fatal',
+  Error = 'error',
+  Debug = 'debug',
+  Trace = 'trace',
+  Warn = 'warn',
+  Info = 'info',
+}
 
 export interface Logger {
   debug(message: string, fields?: Fields): void;
@@ -53,3 +61,5 @@ export class ConsoleLogger {
     return this.logger;
   }
 }
+
+export const logger = new ConsoleLogger();
