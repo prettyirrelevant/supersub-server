@@ -55,6 +55,7 @@
     "pino-http": "^10.1.0",
     "pm2": "^5.3.1",
     "prisma": "^5.14.0",
+    "resend": "^3.2.0",
     "zod": "^3.23.8",
     "zod-validation-error": "^3.3.0"
   }

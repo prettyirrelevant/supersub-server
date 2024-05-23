@@ -1,12 +1,12 @@
 import { type User } from '@privy-io/server-auth';
-import { polygonAmoy } from '@alchemy/aa-core';
+import { type Chain } from 'viem/chains';
 
 import { getMultiOwnerModularAccountAddresses } from '~/pkg/evm';
 import { getUniqueElements } from '~/utils';
 import { privy } from '~/pkg/privy';
 import { prisma } from '~/pkg/db';
 
-export const fetchSmartAccounts = async () => {
+export const fetchSmartAccounts = async (chain: Chain) => {
   const privyUsers = await privy.getUsers();
   const usersByWalletAddress = privyUsers.reduce(
     (mapping, user) => {
@@ -27,10 +27,7 @@ export const fetchSmartAccounts = async () => {
     addressesInDb,
   );
 
-  const modularAccountAddressesForNewWallets = await getMultiOwnerModularAccountAddresses(
-    polygonAmoy,
-    newWalletAddresses,
-  );
+  const modularAccountAddressesForNewWallets = await getMultiOwnerModularAccountAddresses(chain, newWalletAddresses);
 
   await prisma.account.createMany({
     data: Object.entries(modularAccountAddressesForNewWallets).map(([walletAddress, modularAccountAddress]) => ({
