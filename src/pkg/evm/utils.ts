@@ -2,7 +2,7 @@ import {
   getDefaultMultiOwnerModularAccountFactoryAddress,
   MultiOwnerModularAccountFactoryAbi,
 } from '@alchemy/aa-accounts';
-import { createPublicClient, http } from 'viem';
+import { createPublicClient, fromHex, http } from 'viem';
 import { type Chain } from 'viem/chains';
 
 export const getEvmHttpClient = (chain: Chain) => {
@@ -31,3 +31,5 @@ export const getMultiOwnerModularAccountAddresses = async (chain: Chain, owners:
     {} as Record<`0x${string}`, `0x${string}`>,
   );
 };
+
+export const hexToString = (hex: `0x${string}`): string => fromHex(hex, 'string');

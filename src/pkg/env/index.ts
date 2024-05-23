@@ -8,6 +8,7 @@ const zEnv = z.object({
   REDIS_URL: z.string().url().min(1),
   RESEND_API_KEY: z.string().min(1),
   PRIVY_APP_ID: z.string().min(1),
+  PRIVATE_KEY: z.string().min(1),
   PORT: z.number().default(3456),
   SECRET_KEY: z.string().min(1),
 });

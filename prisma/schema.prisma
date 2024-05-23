@@ -103,11 +103,13 @@ model Transaction {
 
 // Subscriptions
 model Subscription {
-  id               Int      @id @default(autoincrement())
-  onchainReference String   @unique
-  isActive         Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id               Int       @id @default(autoincrement())
+  onchainReference String    @unique
+  isActive         Boolean   @default(true)
+  lastChargeDate   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   creatorAddress String
   creator        Account @relation(name: "ownedSubscriptions", fields: [creatorAddress], references: [smartAccountAddress])

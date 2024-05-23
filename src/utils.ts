@@ -3,11 +3,11 @@ export const getUniqueElements = <T>(arr1: T[], arr2: T[]): T[] => {
   return arr1.filter((item) => !set.has(item));
 };
 
-export function* chunks<T>(arr: T[], chunkSize: number): IterableIterator<T[]> {
-  for (let i = 0; i < arr.length; i += chunkSize) {
-    yield arr.slice(i, i + chunkSize);
-  }
-}
+export const chunks = <T>(input: T[], size: number): T[][] => {
+  return input.reduce((arr: T[][], item: T, idx: number) => {
+    return idx % size === 0 ? [...arr, [item]] : [...arr.slice(0, -1), [...arr.slice(-1)[0], item]];
+  }, [] as T[][]);
+};
 
 export function getRanges(begin: number, finish: number, chunkSize: number): [bigint, bigint][] {
   const ranges: [bigint, bigint][] = [];
