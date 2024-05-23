@@ -39,6 +39,8 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@alchemy/aa-accounts": "^3.16.0",
+    "@alchemy/aa-core": "^3.12.3",
     "@bull-board/api": "^5.17.1",
     "@bull-board/express": "^5.17.1",
     "@prisma/client": "^5.14.0",
