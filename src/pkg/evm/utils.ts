@@ -12,7 +12,7 @@ export const getEvmHttpClient = (chain: Chain) => {
 export const getMultiOwnerModularAccountAddresses = async (chain: Chain, owners: `0x${string}`[]) => {
   const client = getEvmHttpClient(chain);
   const factoryAddress = getDefaultMultiOwnerModularAccountFactoryAddress(chain);
-  const factoryContract = { abi: MultiOwnerModularAccountFactoryAbi, address: factoryAddress };
+  const factoryContract = { abi: MultiOwnerModularAccountFactoryAbi, address: factoryAddress } as const;
 
   const calls = owners.map((owner) => ({
     ...factoryContract,

@@ -88,6 +88,9 @@ model Transaction {
   type             TransactionType
   onchainReference String          @unique
 
+  tokenAddress String
+  token        Token  @relation(fields: [tokenAddress], references: [address])
+
   subscriptionOnchainReference String?
   subscription                 Subscription? @relation(fields: [subscriptionOnchainReference], references: [onchainReference])
 
@@ -122,14 +125,16 @@ model Subscription {
 
 // Tokens
 model Token {
-  id       Int    @id @default(autoincrement())
-  address  String @unique
-  decimals Int
+  id       Int     @id @default(autoincrement())
+  address  String  @unique
+  decimals Int?
+  symbol   String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  products Product[]
+  products     Product[]
+  transactions Transaction[]
 }
 
 // API Keys
