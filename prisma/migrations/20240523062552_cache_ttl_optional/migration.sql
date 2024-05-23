@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Cache" ALTER COLUMN "ttl" DROP NOT NULL;
