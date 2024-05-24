@@ -33,3 +33,7 @@ export const getMultiOwnerModularAccountAddresses = async (chain: Chain, owners:
 };
 
 export const hexToString = (hex: `0x${string}`): string => fromHex(hex, 'string');
+
+export const solidityTimestampToDateTime = (ts: bigint): Date => {
+  return new Date(Number(ts) * 1000);
+};

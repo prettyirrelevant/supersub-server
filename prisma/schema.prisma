@@ -26,21 +26,27 @@ model Account {
 
   apiKeys                 ApiKey[]
   products                Product[]
-  transactions            Transaction[]
   ownedSubscriptions      Subscription[] @relation("ownedSubscriptions")
   subscribedSubscriptions Subscription[] @relation("subscribedSubscriptions")
 
   @@index([smartAccountAddress], type: Hash)
 }
 
+// Product Types
+enum ProductType {
+  RECURRING // refers to recurring payments
+  SUBSCRIPTION // refers to subscriptions
+}
+
 // Products
 model Product {
-  id               Int     @id @default(autoincrement())
+  id               Int         @id @default(autoincrement())
   name             String
+  type             ProductType
   destinationChain Int
-  onchainReference String  @unique
+  onchainReference Int         @unique
   receivingAddress String
-  isActive         Boolean @default(true)
+  isActive         Boolean     @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -60,13 +66,13 @@ model Plan {
   id               Int     @id @default(autoincrement())
   chargeInterval   Int
   price            Decimal
-  onchainReference String  @unique
+  onchainReference Int     @unique
   isActive         Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  productOnchainReference String
+  productOnchainReference Int
   product                 Product @relation(fields: [productOnchainReference], references: [onchainReference])
 
   subscription Subscription[]
@@ -84,6 +90,7 @@ model Transaction {
   id               Int             @id @default(autoincrement())
   amount           Decimal
   narration        String
+  sender           String?
   recipient        String?
   type             TransactionType
   onchainReference String          @unique
@@ -91,11 +98,8 @@ model Transaction {
   tokenAddress String
   token        Token  @relation(fields: [tokenAddress], references: [address])
 
-  subscriptionOnchainReference String?
+  subscriptionOnchainReference Int?
   subscription                 Subscription? @relation(fields: [subscriptionOnchainReference], references: [onchainReference])
-
-  accountAddress String
-  account        Account @relation(fields: [accountAddress], references: [smartAccountAddress])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -103,10 +107,11 @@ model Transaction {
 
 // Subscriptions
 model Subscription {
-  id               Int       @id @default(autoincrement())
-  onchainReference String    @unique
-  isActive         Boolean   @default(true)
-  lastChargeDate   DateTime?
+  id                 Int       @id @default(autoincrement())
+  onchainReference   Int       @unique
+  subscriptionExpiry DateTime?
+  lastChargeDate     DateTime?
+  isActive           Boolean   @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -114,10 +119,10 @@ model Subscription {
   creatorAddress String
   creator        Account @relation(name: "ownedSubscriptions", fields: [creatorAddress], references: [smartAccountAddress])
 
-  planOnchainReference String
-  plan                 Plan   @relation(fields: [planOnchainReference], references: [onchainReference])
+  planOnchainReference Int
+  plan                 Plan @relation(fields: [planOnchainReference], references: [onchainReference])
 
-  productOnchainReference String
+  productOnchainReference Int
   product                 Product @relation(fields: [productOnchainReference], references: [onchainReference])
 
   subscriberAddress String

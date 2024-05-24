@@ -3,6 +3,7 @@ import { type Chain } from 'viem/chains';
 
 import {
   SUBSCRIPTION_PLUGIN_INIT_BLOCK,
+  solidityTimestampToDateTime,
   SUBSCRIPTION_PLUGIN_ADDRESS,
   SubscriptionPluginAbi,
   getEvmHttpClient,
@@ -90,9 +91,10 @@ const handleProductCreated = async (
       creator: {
         connect: { smartAccountAddress: decodedEvent.args.provider },
       },
+      type: decodedEvent.args.productType === 0 ? 'RECURRING' : 'SUBSCRIPTION',
       destinationChain: Number(decodedEvent.args.destinationChain),
+      onchainReference: Number(decodedEvent.args.productId),
       receivingAddress: decodedEvent.args.receivingAddress,
-      onchainReference: decodedEvent.args.productId,
       name: hexToString(decodedEvent.args.name),
       isActive: decodedEvent.args.isActive,
     },
@@ -105,14 +107,11 @@ const handleProductUpdated = async (
   const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
   await prisma.product.update({
     data: {
-      token: {
-        connect: { address: decodedEvent.args.chargeToken },
-      },
       destinationChain: Number(decodedEvent.args.destinationChain),
       receivingAddress: decodedEvent.args.receivingAddress,
       isActive: decodedEvent.args.isActive,
     },
-    where: { onchainReference: decodedEvent.args.productId },
+    where: { onchainReference: Number(decodedEvent.args.productId) },
   });
 };
 
@@ -123,10 +122,10 @@ const handlePlanCreated = async (
   await prisma.plan.create({
     data: {
       product: {
-        connect: { onchainReference: decodedEvent.args.productId },
+        connect: { onchainReference: Number(decodedEvent.args.productId) },
       },
       chargeInterval: Number(decodedEvent.args.chargeInterval),
-      onchainReference: decodedEvent.args.planId,
+      onchainReference: Number(decodedEvent.args.planId),
       price: decodedEvent.args.price.toString(),
       isActive: decodedEvent.args.isActive,
     },
@@ -138,7 +137,7 @@ const handlePlanUpdated = async (
 ) => {
   const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
   await prisma.product.update({
-    where: { onchainReference: decodedEvent.args.planId },
+    where: { onchainReference: Number(decodedEvent.args.planId) },
     data: { isActive: decodedEvent.args.isActive },
   });
 };
@@ -148,8 +147,8 @@ const handleSubscriptionPlanChanged = async (
 ) => {
   const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
   await prisma.subscription.update({
-    data: { plan: { connect: { onchainReference: decodedEvent.args.planId } } },
-    where: { onchainReference: decodedEvent.args.subscriptionId },
+    data: { plan: { connect: { onchainReference: Number(decodedEvent.args.planId) } } },
+    where: { onchainReference: Number(decodedEvent.args.subscriptionId) },
   });
 };
 
@@ -157,15 +156,18 @@ const handleSubscribed = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'Subscribed'>,
 ) => {
   const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
-  await prisma.subscription.create({
-    data: {
+  await prisma.subscription.upsert({
+    create: {
       subscriber: { connect: { smartAccountAddress: decodedEvent.args.subscriber } },
+      product: { connect: { onchainReference: Number(decodedEvent.args.product) } },
+      subscriptionExpiry: solidityTimestampToDateTime(decodedEvent.args.endTime),
       creator: { connect: { smartAccountAddress: decodedEvent.args.provider } },
-      product: { connect: { onchainReference: decodedEvent.args.product } },
-      plan: { connect: { onchainReference: decodedEvent.args.plan } },
-      onchainReference: decodedEvent.args.subscriptionId,
+      plan: { connect: { onchainReference: Number(decodedEvent.args.plan) } },
+      onchainReference: Number(decodedEvent.args.subscriptionId),
       isActive: true,
     },
+    where: { onchainReference: Number(decodedEvent.args.subscriptionId) },
+    update: {},
   });
 };
 
@@ -175,7 +177,7 @@ const handleUnSubscribed = async (
   const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
   await prisma.subscription.update({
     where: {
-      onchainReference: decodedEvent.args.subscriptionId,
+      onchainReference: Number(decodedEvent.args.subscriptionId),
     },
     data: {
       isActive: false,
@@ -184,13 +186,41 @@ const handleUnSubscribed = async (
 };
 
 const handleSubscriptionCharged = async (
-  event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'Subscribed'>,
+  event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'SubscriptionCharged'>,
 ) => {
   const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
-  await prisma.subscription.update({
-    where: { onchainReference: decodedEvent.args.subscriptionId },
-    data: { lastChargeDate: event. },
+  const subscription = await prisma.subscription.findUnique({
+    where: { onchainReference: Number(decodedEvent.args.subscriptionId) },
+    include: { product: true },
   });
-  // create a withdrawal transaction & a deposit transaction.
-  // update the last charge date on the subscription row.
+
+  await prisma.transaction.createMany({
+    data: [
+      {
+        subscriptionOnchainReference: Number(decodedEvent.args.subscriptionId),
+        tokenAddress: subscription?.product.tokenAddress as string,
+        amount: decodedEvent.args.amount.toString(),
+        onchainReference: event.transactionHash,
+        recipient: subscription?.creatorAddress,
+        narration: 'Subscription fee deducted',
+        sender: decodedEvent.args.subscriber,
+        type: 'WITHDRAWAL',
+      },
+      {
+        subscriptionOnchainReference: Number(decodedEvent.args.subscriptionId),
+        tokenAddress: subscription?.product.tokenAddress as string,
+        amount: decodedEvent.args.amount.toString(),
+        onchainReference: event.transactionHash,
+        recipient: subscription?.creatorAddress,
+        narration: 'Subscription fee received',
+        sender: decodedEvent.args.subscriber,
+        type: 'DEPOSIT',
+      },
+    ],
+  });
+
+  await prisma.subscription.update({
+    data: { lastChargeDate: solidityTimestampToDateTime(decodedEvent.args.timestamp) },
+    where: { onchainReference: Number(decodedEvent.args.subscriptionId) },
+  });
 };

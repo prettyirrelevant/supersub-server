@@ -55,14 +55,14 @@ export const SubscriptionPluginAbi = [
   {
     inputs: [
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: 'productId',
-        type: 'bytes32',
+        type: 'uint256',
         indexed: true,
       },
       {
-        internalType: 'bytes32',
-        type: 'bytes32',
+        internalType: 'uint256',
+        type: 'uint256',
         name: 'planId',
         indexed: true,
       },
@@ -92,8 +92,8 @@ export const SubscriptionPluginAbi = [
   {
     inputs: [
       {
-        internalType: 'bytes32',
-        type: 'bytes32',
+        internalType: 'uint256',
+        type: 'uint256',
         name: 'planId',
         indexed: true,
       },
@@ -111,9 +111,9 @@ export const SubscriptionPluginAbi = [
   {
     inputs: [
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: 'productId',
-        type: 'bytes32',
+        type: 'uint256',
         indexed: true,
       },
       {
@@ -127,6 +127,12 @@ export const SubscriptionPluginAbi = [
         type: 'bytes32',
         indexed: false,
         name: 'name',
+      },
+      {
+        internalType: 'enum SubscriptionPlugin.ProductType',
+        name: 'productType',
+        indexed: false,
+        type: 'uint8',
       },
       {
         internalType: 'address',
@@ -160,20 +166,14 @@ export const SubscriptionPluginAbi = [
   {
     inputs: [
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: 'productId',
-        type: 'bytes32',
+        type: 'uint256',
         indexed: true,
       },
       {
         name: 'receivingAddress',
         internalType: 'address',
-        type: 'address',
-        indexed: false,
-      },
-      {
-        internalType: 'address',
-        name: 'chargeToken',
         type: 'address',
         indexed: false,
       },
@@ -209,21 +209,27 @@ export const SubscriptionPluginAbi = [
         indexed: false,
       },
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: 'product',
-        type: 'bytes32',
+        type: 'uint256',
         indexed: true,
       },
       {
-        internalType: 'bytes32',
-        type: 'bytes32',
+        internalType: 'uint256',
+        type: 'uint256',
         indexed: true,
         name: 'plan',
       },
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: 'subscriptionId',
-        type: 'bytes32',
+        type: 'uint256',
+        indexed: false,
+      },
+      {
+        internalType: 'uint256',
+        name: 'endTime',
+        type: 'uint256',
         indexed: false,
       },
     ],
@@ -246,15 +252,21 @@ export const SubscriptionPluginAbi = [
         indexed: false,
       },
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: 'subscriptionId',
-        type: 'bytes32',
+        type: 'uint256',
         indexed: false,
       },
       {
-        internalType: 'bytes32',
-        type: 'bytes32',
+        internalType: 'uint256',
+        type: 'uint256',
         name: 'planId',
+        indexed: true,
+      },
+      {
+        internalType: 'uint256',
+        name: 'productId',
+        type: 'uint256',
         indexed: true,
       },
       {
@@ -262,6 +274,12 @@ export const SubscriptionPluginAbi = [
         type: 'uint256',
         indexed: false,
         name: 'amount',
+      },
+      {
+        internalType: 'uint256',
+        name: 'timestamp',
+        type: 'uint256',
+        indexed: false,
       },
     ],
     name: 'SubscriptionCharged',
@@ -277,14 +295,14 @@ export const SubscriptionPluginAbi = [
         name: 'user',
       },
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: 'subscriptionId',
-        type: 'bytes32',
+        type: 'uint256',
         indexed: false,
       },
       {
-        internalType: 'bytes32',
-        type: 'bytes32',
+        internalType: 'uint256',
+        type: 'uint256',
         indexed: false,
         name: 'planId',
       },
@@ -302,9 +320,9 @@ export const SubscriptionPluginAbi = [
         name: 'user',
       },
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: 'subscriptionId',
-        type: 'bytes32',
+        type: 'uint256',
         indexed: false,
       },
     ],
@@ -367,24 +385,37 @@ export const SubscriptionPluginAbi = [
   {
     inputs: [
       {
-        internalType: 'bytes32',
-        name: 'productId',
-        type: 'bytes32',
+        internalType: 'uint256',
+        name: 'subscriptionId',
+        type: 'uint256',
       },
       {
-        internalType: 'bytes32',
-        type: 'bytes32',
+        internalType: 'uint256',
+        name: 'endTime',
+        type: 'uint256',
+      },
+    ],
+    name: 'changeSubscriptionEndTime',
+    stateMutability: 'nonpayable',
+    type: 'function',
+    outputs: [],
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'productId',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        type: 'uint256',
         name: 'planId',
       },
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: 'subscriptionId',
-        type: 'bytes32',
-      },
-      {
-        internalType: 'address',
-        name: 'provider',
-        type: 'address',
+        type: 'uint256',
       },
     ],
     name: 'changeSubscriptionPlan',
@@ -395,29 +426,14 @@ export const SubscriptionPluginAbi = [
   {
     inputs: [
       {
-        internalType: 'bytes32',
-        type: 'bytes32',
-        name: 'planId',
-      },
-      {
-        internalType: 'address',
-        name: 'provider',
-        type: 'address',
-      },
-      {
-        internalType: 'bytes32',
-        name: 'productId',
-        type: 'bytes32',
-      },
-      {
         internalType: 'address',
         name: 'subscriber',
         type: 'address',
       },
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: 'subscriptionId',
-        type: 'bytes32',
+        type: 'uint256',
       },
     ],
     stateMutability: 'nonpayable',
@@ -428,9 +444,9 @@ export const SubscriptionPluginAbi = [
   {
     inputs: [
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: '_productId',
-        type: 'bytes32',
+        type: 'uint256',
       },
       {
         name: '_chargeInterval',
@@ -454,6 +470,11 @@ export const SubscriptionPluginAbi = [
         internalType: 'bytes32',
         type: 'bytes32',
         name: '_name',
+      },
+      {
+        internalType: 'enum SubscriptionPlugin.ProductType',
+        name: '_type',
+        type: 'uint8',
       },
       {
         internalType: 'address',
@@ -507,14 +528,14 @@ export const SubscriptionPluginAbi = [
       {
         components: [
           {
-            internalType: 'bytes32',
+            internalType: 'uint256',
             name: 'subscriptionId',
-            type: 'bytes32',
+            type: 'uint256',
           },
           {
-            internalType: 'bytes32',
+            internalType: 'uint256',
             name: 'product',
-            type: 'bytes32',
+            type: 'uint256',
           },
           {
             internalType: 'address',
@@ -522,13 +543,18 @@ export const SubscriptionPluginAbi = [
             type: 'address',
           },
           {
-            internalType: 'bytes32',
-            type: 'bytes32',
+            internalType: 'uint256',
+            type: 'uint256',
             name: 'plan',
           },
           {
             internalType: 'uint256',
             name: 'lastChargeDate',
+            type: 'uint256',
+          },
+          {
+            internalType: 'uint256',
+            name: 'endTime',
             type: 'uint256',
           },
           {
@@ -561,9 +587,9 @@ export const SubscriptionPluginAbi = [
         type: 'address',
       },
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: 'productId',
-        type: 'bytes32',
+        type: 'uint256',
       },
     ],
     outputs: [
@@ -602,6 +628,63 @@ export const SubscriptionPluginAbi = [
     name: 'onUninstall',
     type: 'function',
     outputs: [],
+  },
+  {
+    outputs: [
+      {
+        internalType: 'uint256',
+        type: 'uint256',
+        name: '',
+      },
+    ],
+    stateMutability: 'view',
+    name: 'planNonce',
+    type: 'function',
+    inputs: [],
+  },
+  {
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: 'productId',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        type: 'uint256',
+        name: 'planId',
+      },
+      {
+        internalType: 'address',
+        name: 'provider',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        type: 'uint256',
+        name: 'price',
+      },
+      {
+        internalType: 'uint32',
+        name: 'chargeInterval',
+        type: 'uint32',
+      },
+      {
+        internalType: 'bool',
+        name: 'isActive',
+        type: 'bool',
+      },
+    ],
+    inputs: [
+      {
+        internalType: 'uint256',
+        type: 'uint256',
+        name: '',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+    name: 'plans',
   },
   {
     outputs: [
@@ -1083,77 +1166,27 @@ export const SubscriptionPluginAbi = [
         name: '',
       },
     ],
-    inputs: [
-      {
-        internalType: 'address',
-        type: 'address',
-        name: '',
-      },
-    ],
     stateMutability: 'view',
-    name: 'productNonces',
+    name: 'productNonce',
     type: 'function',
+    inputs: [],
   },
   {
     outputs: [
-      {
-        internalType: 'bytes32',
-        name: 'productId',
-        type: 'bytes32',
-      },
-      {
-        internalType: 'bytes32',
-        type: 'bytes32',
-        name: 'planId',
-      },
-      {
-        internalType: 'address',
-        name: 'provider',
-        type: 'address',
-      },
       {
         internalType: 'uint256',
-        type: 'uint256',
-        name: 'price',
-      },
-      {
-        internalType: 'uint32',
-        name: 'chargeInterval',
-        type: 'uint32',
-      },
-      {
-        internalType: 'bool',
-        name: 'isActive',
-        type: 'bool',
-      },
-    ],
-    inputs: [
-      {
-        internalType: 'address',
-        type: 'address',
-        name: '',
-      },
-      {
-        internalType: 'bytes32',
-        type: 'bytes32',
-        name: '',
-      },
-    ],
-    stateMutability: 'view',
-    name: 'providerPlans',
-    type: 'function',
-  },
-  {
-    outputs: [
-      {
-        internalType: 'bytes32',
         name: 'productId',
-        type: 'bytes32',
+        type: 'uint256',
       },
       {
         internalType: 'bytes32',
         type: 'bytes32',
         name: 'name',
+      },
+      {
+        internalType: 'enum SubscriptionPlugin.ProductType',
+        name: 'productType',
+        type: 'uint8',
       },
       {
         internalType: 'address',
@@ -1176,11 +1209,6 @@ export const SubscriptionPluginAbi = [
         type: 'uint256',
       },
       {
-        internalType: 'uint8',
-        name: 'planNonce',
-        type: 'uint8',
-      },
-      {
         internalType: 'bool',
         name: 'isActive',
         type: 'bool',
@@ -1188,18 +1216,13 @@ export const SubscriptionPluginAbi = [
     ],
     inputs: [
       {
-        internalType: 'address',
-        type: 'address',
-        name: '',
-      },
-      {
-        internalType: 'bytes32',
-        type: 'bytes32',
+        internalType: 'uint256',
+        type: 'uint256',
         name: '',
       },
     ],
-    name: 'providerProducts',
     stateMutability: 'view',
+    name: 'products',
     type: 'function',
   },
   {
@@ -1233,19 +1256,14 @@ export const SubscriptionPluginAbi = [
   {
     inputs: [
       {
-        internalType: 'bytes32',
-        type: 'bytes32',
+        internalType: 'uint256',
+        type: 'uint256',
         name: 'planId',
       },
       {
-        internalType: 'bytes32',
-        name: 'productId',
-        type: 'bytes32',
-      },
-      {
-        internalType: 'address',
-        name: 'provider',
-        type: 'address',
+        internalType: 'uint256',
+        name: 'endTime',
+        type: 'uint256',
       },
     ],
     stateMutability: 'nonpayable',
@@ -1294,9 +1312,9 @@ export const SubscriptionPluginAbi = [
   {
     inputs: [
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: 'subscriptionId',
-        type: 'bytes32',
+        type: 'uint256',
       },
     ],
     stateMutability: 'nonpayable',
@@ -1307,9 +1325,9 @@ export const SubscriptionPluginAbi = [
   {
     inputs: [
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: '_planId',
-        type: 'bytes32',
+        type: 'uint256',
       },
       {
         internalType: 'bool',
@@ -1325,14 +1343,9 @@ export const SubscriptionPluginAbi = [
   {
     inputs: [
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: '_productId',
-        type: 'bytes32',
-      },
-      {
-        internalType: 'address',
-        name: '_chargeToken',
-        type: 'address',
+        type: 'uint256',
       },
       {
         internalType: 'address',
@@ -1444,14 +1457,14 @@ export const SubscriptionPluginAbi = [
   {
     outputs: [
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: 'subscriptionId',
-        type: 'bytes32',
+        type: 'uint256',
       },
       {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: 'product',
-        type: 'bytes32',
+        type: 'uint256',
       },
       {
         internalType: 'address',
@@ -1459,13 +1472,18 @@ export const SubscriptionPluginAbi = [
         type: 'address',
       },
       {
-        internalType: 'bytes32',
-        type: 'bytes32',
+        internalType: 'uint256',
+        type: 'uint256',
         name: 'plan',
       },
       {
         internalType: 'uint256',
         name: 'lastChargeDate',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: 'endTime',
         type: 'uint256',
       },
       {
@@ -1481,8 +1499,8 @@ export const SubscriptionPluginAbi = [
         name: '',
       },
       {
-        internalType: 'bytes32',
-        type: 'bytes32',
+        internalType: 'uint256',
+        type: 'uint256',
         name: '',
       },
     ],
