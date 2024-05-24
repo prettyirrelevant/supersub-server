@@ -6,10 +6,11 @@
     "module": "CommonJS",
     "allowJs": true,
 
+    "noEmit": true,
     "esModuleInterop": true,
     "moduleResolution": "Node",
     "allowImportingTsExtensions": true,
-    "noEmit": true,
+    "allowSyntheticDefaultImports": true,
 
     // Best practices
     "strict": true,
