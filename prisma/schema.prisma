@@ -85,15 +85,23 @@ enum TransactionType {
   INFORMATIONAL
 }
 
+// Transaction Statuses
+enum TransactionStatus {
+  SUCCESS
+  FAILED
+  PENDING
+}
+
 // Transactions
 model Transaction {
-  id               Int             @id @default(autoincrement())
+  id               Int               @id @default(autoincrement())
   amount           Decimal
   narration        String
   sender           String?
   recipient        String?
   type             TransactionType
-  onchainReference String          @unique
+  onchainReference String            @unique
+  status           TransactionStatus
 
   tokenAddress String
   token        Token  @relation(fields: [tokenAddress], references: [address])

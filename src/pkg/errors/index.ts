@@ -21,7 +21,7 @@ export class ApiError extends Error {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const handleError = (err: Error, req: Request, res: Response, next: NextFunction) => {
+export const handleError = (err: Error, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof ApiError) {
     if (err.status >= 500) {
       req.log.error(err, 'api error');
