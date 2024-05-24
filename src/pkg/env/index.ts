@@ -4,12 +4,12 @@ const zEnv = z.object({
   ENVIRONMENT: z.enum(['development', 'production']).default('development'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('debug'),
   DATABASE_URL: z.string().url().min(1),
+  PORT: z.coerce.number().default(3456),
   PRIVY_APP_SECRET: z.string().min(1),
   REDIS_URL: z.string().url().min(1),
   RESEND_API_KEY: z.string().min(1),
   PRIVY_APP_ID: z.string().min(1),
   PRIVATE_KEY: z.string().min(1),
-  PORT: z.number().default(3456),
   SECRET_KEY: z.string().min(1),
 });
 

@@ -20,7 +20,7 @@ application.use(express.json());
 application.use(requestLoggerMiddleware({ logger: logger.getInstance() }));
 application.use('/ui', bullBoardMiddleware());
 
-application.get('/', async (_req: Request, res: Response<SuccessResponse>) => {
+application.get('/', async (req: Request, res: Response<SuccessResponse>) => {
   await queue.add('new-job', { foo: 'bar' });
   return res.status(StatusCodes.OK).json({ data: { ping: 'pong' } });
 });
