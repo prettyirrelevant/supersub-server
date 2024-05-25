@@ -45,8 +45,8 @@ export const privyAuthenticationMiddleware = async (req: Request, res: Response,
     }
 
     req.auth = {
+      address: account.smartAccountAddress,
       method: 'access-token',
-      account: account,
       apiKey: null,
     };
 
