@@ -42,23 +42,21 @@ export const indexSubscriptionPluginEvents = async (chain: Chain) => {
     ),
   );
   const events = eventPromises.map((entry) => (entry.status === 'fulfilled' ? entry.value : [])).flat();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const eventHandlers: Record<string, (event: any) => Promise<void>> = {
+    SubscriptionPlanChanged: handleSubscriptionPlanChanged,
+    SubscriptionCharged: handleSubscriptionCharged,
+    ProductCreated: handleProductCreated,
+    ProductUpdated: handleProductUpdated,
+    Unsubscribed: handleUnSubscribed,
+    PlanCreated: handlePlanCreated,
+    PlanUpdated: handlePlanUpdated,
+    Subscribed: handleSubscribed,
+  };
   for (const event of events) {
-    if (event.eventName === 'ProductCreated') {
-      await handleProductCreated(event);
-    } else if (event.eventName === 'ProductUpdated') {
-      await handleProductUpdated(event);
-    } else if (event.eventName === 'PlanCreated') {
-      await handlePlanCreated(event);
-    } else if (event.eventName === 'PlanUpdated') {
-      await handlePlanUpdated(event);
-    } else if (event.eventName === 'SubscriptionPlanChanged') {
-      await handleSubscriptionPlanChanged(event);
-    } else if (event.eventName === 'Subscribed') {
-      await handleSubscribed(event);
-    } else if (event.eventName === 'UnSubscribed') {
-      await handleUnSubscribed(event);
-    } else if (event.eventName === 'SubscriptionCharged') {
-      await handleSubscriptionCharged(event);
+    const handler = eventHandlers[event.eventName];
+    if (handler) {
+      await handler(event);
     }
   }
 
@@ -205,6 +203,7 @@ const handleSubscriptionCharged = async (
         narration: 'Subscription fee deducted',
         sender: decodedEvent.args.subscriber,
         type: 'WITHDRAWAL',
+        status: 'PENDING',
       },
       {
         subscriptionOnchainReference: Number(decodedEvent.args.subscriptionId),
@@ -214,6 +213,7 @@ const handleSubscriptionCharged = async (
         recipient: subscription?.creatorAddress,
         narration: 'Subscription fee received',
         sender: decodedEvent.args.subscriber,
+        status: 'PENDING',
         type: 'DEPOSIT',
       },
     ],
