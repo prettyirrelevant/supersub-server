@@ -55,8 +55,12 @@ jobs:
 
       - name: 'Test the codebase'
         env:
+          PRIVY_APP_SECRET: 'privy-app-secret'
           REDIS_URL: 'redis://localhost:6379'
           SECRET_KEY: 'deeznut!in!your!face'
+          RESEND_API_KEY: 'resend-api-key'
+          PRIVY_APP_ID: 'privy-app-id'
+          PRIVATE_KEY: 'private-key'
           LOG_LEVEL: 'info'
           DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/test'
         run: 'npm test --coverage'

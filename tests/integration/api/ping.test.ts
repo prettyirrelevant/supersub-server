@@ -1,7 +1,7 @@
-import { expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import request from 'supertest';
 
-import { application } from '../../src';
+import { application } from '~/app';
 
 describe('Ping', () => {
   test('GET /', async () => {

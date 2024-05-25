@@ -1,6 +1,6 @@
 import { NextFunction, Response, Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { polygonAmoy } from '@alchemy/aa-core';
+import { polygonAmoy } from 'viem/chains';
 
 import { getMultiOwnerModularAccountAddresses } from '~/pkg/evm';
 import { errorResponse } from '~/pkg/responses';

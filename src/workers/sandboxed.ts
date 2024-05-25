@@ -1,4 +1,4 @@
-import { polygonAmoy } from '@alchemy/aa-core';
+import { polygonAmoy } from 'viem/chains';
 import { Job } from 'bullmq';
 
 import { indexSubscriptionPluginEvents } from './handlers/indexSubscriptionPluginEvents';
