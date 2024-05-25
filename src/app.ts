@@ -10,6 +10,10 @@ import { type SuccessResponse } from '~/pkg/responses';
 import { handleError, ApiError } from '~/pkg/errors';
 import { queue } from '~/pkg/bullmq';
 import { config } from '~/pkg/env';
+import { prisma } from '~/pkg/db';
+
+import { privyAuthenticationMiddleware } from './middlewares/auth';
+import { generateApiKeyPair } from './utils';
 
 export const application: Application = express();
 export const logger = new ConsoleLogger({ level: config.LOG_LEVEL as LogLevel });
@@ -24,6 +28,46 @@ application.get('/', async (req: Request, res: Response<SuccessResponse>) => {
   await queue.add('new-job', { foo: 'bar' });
   return res.status(StatusCodes.OK).json({ data: { ping: 'pong' } });
 });
+
+application.get(
+  '/api-keys/create',
+  privyAuthenticationMiddleware,
+  async (req: Request, res: Response<SuccessResponse>) => {
+    const address = req.auth.address;
+    const apiKey = await prisma.apiKey.findFirst({ where: { accountAddress: address } });
+    if (apiKey) {
+      return res.status(StatusCodes.BAD_REQUEST).json({ data: { error: 'apiKey already exists for this user' } });
+    }
+    const { secretKey, publicKey } = generateApiKeyPair();
+    await prisma.apiKey.create({
+      data: {
+        account: {
+          connect: { smartAccountAddress: address },
+        },
+        publicKey: publicKey,
+        secretKey: secretKey,
+      },
+    });
+    return res.status(StatusCodes.CREATED).json({ data: { publicKey: publicKey, secretKey: secretKey } });
+  },
+);
+
+application.patch(
+  '/api-keys/reset',
+  privyAuthenticationMiddleware,
+  async (req: Request, res: Response<SuccessResponse>) => {
+    const address = req.auth.address;
+    const { secretKey, publicKey } = generateApiKeyPair();
+    await prisma.apiKey.update({
+      data: {
+        publicKey: publicKey,
+        secretKey: secretKey,
+      },
+      where: { accountAddress: address },
+    });
+    return res.status(StatusCodes.OK).json({ data: { publicKey: publicKey, secretKey: secretKey } });
+  },
+);
 
 application.use((_req: Request, _res: Response, next: NextFunction) => {
   next(

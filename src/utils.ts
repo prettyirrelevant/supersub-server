@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 export const getUniqueElements = <T>(arr1: T[], arr2: T[]): T[] => {
   const set = new Set(arr2);
   return arr1.filter((item) => !set.has(item));
@@ -17,4 +18,11 @@ export function getRanges(begin: number, finish: number, chunkSize: number): [bi
   }
 
   return ranges;
+}
+
+export function generateApiKeyPair(): Record<string, string> {
+  return {
+    publicKey: `pk_${randomBytes(16).toString('hex')}`,
+    secretKey: `sk_${randomBytes(16).toString('hex')}`,
+  };
 }
