@@ -5,7 +5,7 @@ import { getEvmHttpClient } from '~/pkg/evm';
 import { prisma } from '~/pkg/db';
 
 export const enrichERC20Tokens = async (chain: Chain) => {
-  const tokens = await prisma.token.findMany({ where: { decimals: 0 } });
+  const tokens = await prisma.token.findMany({ where: { decimals: null } });
 
   const client = getEvmHttpClient(chain);
   const calls = tokens.map((token) => {
@@ -13,14 +13,20 @@ export const enrichERC20Tokens = async (chain: Chain) => {
 
     return { ...contract, functionName: 'decimals' };
   });
-
   const results = await client.multicall({ contracts: calls });
-  results.forEach(async (result, index) => {
-    if (result.status === 'success') {
-      await prisma.token.update({
-        where: { address: tokens[index].address },
-        data: { decimals: Number(result.result) },
-      });
+
+  const dbActions = [];
+  for (let i = 0; i < results.length; i++) {
+    if (results[i].status !== 'success') {
+      continue;
     }
-  });
+    dbActions.push(
+      prisma.token.update({
+        data: { decimals: Number(results[i].result) },
+        where: { address: tokens[i].address },
+      }),
+    );
+  }
+
+  await prisma.$transaction(dbActions);
 };
