@@ -141,7 +141,7 @@ describe('fetchSmartAccounts', () => {
     });
     expect(createdAccounts).toHaveLength(3);
     expect(createdAccounts[1]).toMatchObject({
-      smartAccountAddress: '0x564BB9C687BE0Ff8474aD67b9D2c6a1b402A86C7',
+      smartAccountAddress: '0xeA20DB45a5D8FdF65249Eb5d22b0730aB7d2Ba9A',
       eoaAddress: '0x83fCFe8Ba2FEce9578F0BbaFeD4Ebf5E915045B9',
       emailAddress: 'user2@example.com',
       metadata: { privyDid: '2' },

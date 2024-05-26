@@ -24,7 +24,7 @@ model Account {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  apiKey                 ApiKey?
+  apiKey                  ApiKey?
   products                Product[]
   ownedSubscriptions      Subscription[] @relation("ownedSubscriptions")
   subscribedSubscriptions Subscription[] @relation("subscribedSubscriptions")
@@ -42,6 +42,8 @@ enum ProductType {
 model Product {
   id               Int         @id @default(autoincrement())
   name             String
+  description      String
+  logoUrl          String
   type             ProductType
   destinationChain Int
   onchainReference Int         @unique
@@ -161,7 +163,7 @@ model ApiKey {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  accountAddress String @unique
+  accountAddress String  @unique
   account        Account @relation(fields: [accountAddress], references: [smartAccountAddress])
 }
 

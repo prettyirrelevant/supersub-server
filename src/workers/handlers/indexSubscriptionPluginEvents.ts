@@ -44,7 +44,7 @@ export const indexSubscriptionPluginEvents = async (chain: Chain) => {
   const events = eventPromises.map((entry) => (entry.status === 'fulfilled' ? entry.value : [])).flat();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const eventHandlers: Record<string, (event: any) => Promise<void>> = {
-    SubscriptionPlanChanged: handleSubscriptionPlanChanged,
+    // SubscriptionPlanChanged: handleSubscriptionPlanChanged,
     SubscriptionCharged: handleSubscriptionCharged,
     ProductCreated: handleProductCreated,
     ProductUpdated: handleProductUpdated,
@@ -93,8 +93,10 @@ const handleProductCreated = async (
       destinationChain: Number(decodedEvent.args.destinationChain),
       onchainReference: Number(decodedEvent.args.productId),
       receivingAddress: decodedEvent.args.receivingAddress,
+      description: decodedEvent.args.description,
       name: hexToString(decodedEvent.args.name),
       isActive: decodedEvent.args.isActive,
+      logoUrl: decodedEvent.args.logoUrl,
     },
   });
 };
@@ -140,22 +142,22 @@ const handlePlanUpdated = async (
   });
 };
 
-const handleSubscriptionPlanChanged = async (
-  event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'SubscriptionPlanChanged'>,
-) => {
-  const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
-  await prisma.subscription.update({
-    data: { plan: { connect: { onchainReference: Number(decodedEvent.args.planId) } } },
-    where: { onchainReference: Number(decodedEvent.args.subscriptionId) },
-  });
-};
+// const handleSubscriptionPlanChanged = async (
+//   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'SubscriptionPlanChanged'>,
+// ) => {
+//   const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
+//   await prisma.subscription.update({
+//     data: { plan: { connect: { onchainReference: Number(decodedEvent.args.planId) } } },
+//     where: { onchainReference: Number(decodedEvent.args.subscriptionId) },
+//   });
+// };
 
 const handleSubscribed = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'Subscribed'>,
 ) => {
   const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
-  await prisma.subscription.upsert({
-    create: {
+  await prisma.subscription.create({
+    data: {
       subscriber: { connect: { smartAccountAddress: decodedEvent.args.subscriber } },
       product: { connect: { onchainReference: Number(decodedEvent.args.product) } },
       subscriptionExpiry: solidityTimestampToDateTime(decodedEvent.args.endTime),
@@ -164,8 +166,6 @@ const handleSubscribed = async (
       onchainReference: Number(decodedEvent.args.subscriptionId),
       isActive: true,
     },
-    where: { onchainReference: Number(decodedEvent.args.subscriptionId) },
-    update: {},
   });
 };
 
@@ -203,7 +203,7 @@ const handleSubscriptionCharged = async (
         narration: 'Subscription fee deducted',
         sender: decodedEvent.args.subscriber,
         type: 'WITHDRAWAL',
-        status: 'PENDING',
+        status: 'SUCCESS',
       },
       {
         subscriptionOnchainReference: Number(decodedEvent.args.subscriptionId),
@@ -213,7 +213,7 @@ const handleSubscriptionCharged = async (
         recipient: subscription?.creatorAddress,
         narration: 'Subscription fee received',
         sender: decodedEvent.args.subscriber,
-        status: 'PENDING',
+        status: 'SUCCESS',
         type: 'DEPOSIT',
       },
     ],

@@ -129,6 +129,18 @@ export const SubscriptionPluginAbi = [
         name: 'name',
       },
       {
+        internalType: 'string',
+        name: 'description',
+        indexed: false,
+        type: 'string',
+      },
+      {
+        internalType: 'string',
+        name: 'logoUrl',
+        indexed: false,
+        type: 'string',
+      },
+      {
         internalType: 'enum SubscriptionPlugin.ProductType',
         name: 'productType',
         indexed: false,
@@ -370,6 +382,24 @@ export const SubscriptionPluginAbi = [
     inputs: [],
   },
   {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '_chainId',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint64',
+        name: '_selector',
+        type: 'uint64',
+      },
+    ],
+    stateMutability: 'nonpayable',
+    name: 'addChainSelector',
+    type: 'function',
+    outputs: [],
+  },
+  {
     outputs: [
       {
         internalType: 'address',
@@ -381,6 +411,25 @@ export const SubscriptionPluginAbi = [
     type: 'function',
     name: 'admin',
     inputs: [],
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        type: 'uint256',
+        name: '',
+      },
+    ],
+    outputs: [
+      {
+        internalType: 'uint64',
+        type: 'uint64',
+        name: '',
+      },
+    ],
+    name: 'ccipChainSelectors',
+    stateMutability: 'view',
+    type: 'function',
   },
   {
     inputs: [
@@ -470,6 +519,16 @@ export const SubscriptionPluginAbi = [
         internalType: 'bytes32',
         type: 'bytes32',
         name: '_name',
+      },
+      {
+        internalType: 'string',
+        name: '_description',
+        type: 'string',
+      },
+      {
+        internalType: 'string',
+        name: '_logoUrl',
+        type: 'string',
       },
       {
         internalType: 'enum SubscriptionPlugin.ProductType',
@@ -576,30 +635,6 @@ export const SubscriptionPluginAbi = [
       },
     ],
     name: 'getUserSubscriptions',
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: 'subscriber',
-        type: 'address',
-      },
-      {
-        internalType: 'uint256',
-        name: 'productId',
-        type: 'uint256',
-      },
-    ],
-    outputs: [
-      {
-        internalType: 'bool',
-        type: 'bool',
-        name: '',
-      },
-    ],
-    name: 'isSubscribedToProduct',
     stateMutability: 'view',
     type: 'function',
   },
@@ -1179,11 +1214,6 @@ export const SubscriptionPluginAbi = [
         type: 'uint256',
       },
       {
-        internalType: 'bytes32',
-        type: 'bytes32',
-        name: 'name',
-      },
-      {
         internalType: 'enum SubscriptionPlugin.ProductType',
         name: 'productType',
         type: 'uint8',
@@ -1256,6 +1286,19 @@ export const SubscriptionPluginAbi = [
   {
     inputs: [
       {
+        internalType: 'address',
+        name: '_bridgeAddr',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'nonpayable',
+    name: 'setTokenBridge',
+    type: 'function',
+    outputs: [],
+  },
+  {
+    inputs: [
+      {
         internalType: 'uint256',
         type: 'uint256',
         name: 'planId',
@@ -1270,6 +1313,30 @@ export const SubscriptionPluginAbi = [
     name: 'subscribe',
     type: 'function',
     outputs: [],
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        type: 'address',
+        name: '',
+      },
+      {
+        internalType: 'uint256',
+        type: 'uint256',
+        name: '',
+      },
+    ],
+    outputs: [
+      {
+        internalType: 'bool',
+        type: 'bool',
+        name: '',
+      },
+    ],
+    name: 'subscribedToProduct',
+    stateMutability: 'view',
+    type: 'function',
   },
   {
     outputs: [
@@ -1308,6 +1375,19 @@ export const SubscriptionPluginAbi = [
     name: 'supportsInterface',
     stateMutability: 'view',
     type: 'function',
+  },
+  {
+    outputs: [
+      {
+        internalType: 'contract ITokenBridge',
+        type: 'address',
+        name: '',
+      },
+    ],
+    stateMutability: 'view',
+    name: 'tokenBridge',
+    type: 'function',
+    inputs: [],
   },
   {
     inputs: [
