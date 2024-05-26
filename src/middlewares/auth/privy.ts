@@ -27,7 +27,11 @@ export const privyAuthenticationMiddleware = async (req: Request, res: Response,
 
   try {
     let account = await prisma.account.findFirst({
-      where: { metadata: { equals: verifiedClaims.userId, path: ['privyDid'] } },
+      where: {
+        metadata: {
+          equals: { privyDid: verifiedClaims.userId },
+        },
+      },
     });
     if (!account) {
       const privyUser = await privy.getUser(verifiedClaims.userId);
@@ -51,7 +55,7 @@ export const privyAuthenticationMiddleware = async (req: Request, res: Response,
     };
 
     next();
-  } catch {
+  } catch (e) {
     return errorResponse(res, 'Invalid authorization header provided', StatusCodes.BAD_REQUEST);
   }
 };

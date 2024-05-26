@@ -29,8 +29,8 @@ application.get('/', async (req: Request, res: Response<SuccessResponse>) => {
   return res.status(StatusCodes.OK).json({ data: { ping: 'pong' } });
 });
 
-application.get(
-  '/api-keys/create',
+application.post(
+  '/api/api-keys',
   privyAuthenticationMiddleware,
   async (req: Request, res: Response<SuccessResponse>) => {
     const address = req.auth.address;
@@ -52,14 +52,21 @@ application.get(
   },
 );
 
-application.patch(
-  '/api-keys/reset',
+application.post(
+  '/api/api-keys/reset',
   privyAuthenticationMiddleware,
   async (req: Request, res: Response<SuccessResponse>) => {
     const address = req.auth.address;
     const { secretKey, publicKey } = generateApiKeyPair();
-    await prisma.apiKey.update({
-      data: {
+    await prisma.apiKey.upsert({
+      create: {
+        account: {
+          connect: { smartAccountAddress: address },
+        },
+        publicKey: publicKey,
+        secretKey: secretKey,
+      },
+      update: {
         publicKey: publicKey,
         secretKey: secretKey,
       },

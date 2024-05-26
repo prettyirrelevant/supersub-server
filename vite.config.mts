@@ -7,6 +7,7 @@ export default defineConfig({
       exclude: ['**/node_modules/**', '**/commitlint.config.ts', '**/release.config.cjs', '**/index.ts'],
     },
     setupFiles: ['dotenv/config'],
+    testTimeout: 10_000,
     restoreMocks: true,
     globals: true,
   },

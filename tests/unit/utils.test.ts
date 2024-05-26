@@ -125,7 +125,6 @@ describe('generateApiKeyPair', () => {
   it('publicKey should start with "pk_" and have length of 35', () => {
     const apiKeyPair = generateApiKeyPair();
     const publicKey = apiKeyPair.publicKey;
-    console.log(publicKey);
 
     expect(publicKey.startsWith('pk_')).toBe(true);
     expect(publicKey.length).toBe(35);
