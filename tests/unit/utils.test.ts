@@ -2,7 +2,7 @@ import { arbitrumSepolia, optimismSepolia, polygonAmoy, sepolia } from 'viem/cha
 import { describe, expect, it } from 'vitest';
 
 import { solidityTimestampToDateTime, getEvmHttpClient, hexToString } from '~/pkg/evm/utils';
-import { getUniqueElements, getRanges, chunks } from '~/utils';
+import { generateApiKeyPair, getUniqueElements, getRanges, chunks } from '~/utils';
 
 describe('getUniqueElements', () => {
   it('should return unique elements from arr1 that are not present in arr2', () => {
@@ -111,5 +111,31 @@ describe('solidityTimestampToDateTime', () => {
       const result = solidityTimestampToDateTime(solidityTimestamp);
       expect(result).toEqual(expected);
     });
+  });
+});
+
+describe('generateApiKeyPair', () => {
+  it('should return an object with publicKey and secretKey properties', () => {
+    const apiKeyPair = generateApiKeyPair();
+
+    expect(apiKeyPair).toHaveProperty('publicKey');
+    expect(apiKeyPair).toHaveProperty('secretKey');
+  });
+
+  it('publicKey should start with "pk_" and have length of 35', () => {
+    const apiKeyPair = generateApiKeyPair();
+    const publicKey = apiKeyPair.publicKey;
+    console.log(publicKey);
+
+    expect(publicKey.startsWith('pk_')).toBe(true);
+    expect(publicKey.length).toBe(35);
+  });
+
+  it('secretKey should start with "sk_" and have length of 35', () => {
+    const apiKeyPair = generateApiKeyPair();
+    const secretKey = apiKeyPair.secretKey;
+
+    expect(secretKey.startsWith('sk_')).toBe(true);
+    expect(secretKey.length).toBe(35);
   });
 });
