@@ -196,6 +196,6 @@ describe('indexSubscriptionPluginEvents', () => {
 
     expect(products[0]).toMatchSnapshot();
     expect(plans[0]).toMatchSnapshot();
-    expect(Number(lastQueriedBlockCache?.value as string)).toBeCloseTo(Number(latestBlock));
+    expect(Number(lastQueriedBlockCache?.value as string)).toBeCloseTo(Number(latestBlock), 3); // a difference of 3 mined blocks.
   });
 });
