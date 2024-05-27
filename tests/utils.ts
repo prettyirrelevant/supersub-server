@@ -78,7 +78,10 @@ export const createFakeSubscriptions = async (n: number, accounts: Account[], pr
 };
 
 export const createFakeTokens = async () => {
-  return await prisma.token.createManyAndReturn({ data: TEST_TOKENS.map((token) => ({ address: token })) });
+  return await prisma.token.createManyAndReturn({
+    data: TEST_TOKENS.map((token) => ({ address: token })),
+    skipDuplicates: true,
+  });
 };
 
 export const createFakeTransactions = async (n: number, accounts: Account[]) => {
@@ -125,22 +128,3 @@ export const verifyPrivyAccessToken = async (opts: { verificationKey: jose.KeyLi
     appId: payload.aud,
   };
 };
-
-// // Function to seed the database
-// async function seedDatabase() {
-//   const numAccounts = 10;
-//   const numProducts = 5;
-//   const numPlans = 10;
-//   const numSubscriptions = 20;
-
-//   const accounts = await createFakeAccounts(numAccounts);
-//   const products = await createFakeProducts(numProducts, accounts);
-//   const plans = await createFakePlans(numPlans, products);
-//   const subscriptions = await createFakeSubscriptions(numSubscriptions, accounts, products, plans);
-
-//   console.log(
-//     `Seeded database with ${numAccounts} accounts, ${numProducts} products, ${numPlans} plans, and ${numSubscriptions} subscriptions.`,
-//   );
-// }
-
-// seedDatabase();

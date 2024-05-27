@@ -1,0 +1,26 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`indexSubscriptionPluginEvents > should index all events properly 1`] = `
+{
+  "creatorAddress": "0xF65330dC75e32B20Be62f503a337cD1a072f898f",
+  "description": "spotify nigeria product",
+  "destinationChain": 80002,
+  "isActive": true,
+  "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg",
+  "name": "Spotify NGN",
+  "onchainReference": 1,
+  "receivingAddress": "0xF65330dC75e32B20Be62f503a337cD1a072f898f",
+  "tokenAddress": "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582",
+  "type": "SUBSCRIPTION",
+}
+`;
+
+exports[`indexSubscriptionPluginEvents > should index all events properly 2`] = `
+{
+  "chargeInterval": 86400,
+  "isActive": true,
+  "onchainReference": 1,
+  "price": "5000000",
+  "productOnchainReference": 1,
+}
+`;

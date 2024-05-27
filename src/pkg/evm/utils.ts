@@ -39,3 +39,5 @@ export const hexToString = (hex: `0x${string}`): string => fromHex(hex, 'string'
 export const solidityTimestampToDateTime = (ts: bigint): Date => {
   return new Date(Number(ts) * 1000);
 };
+
+export const bytes32ToText = (hex: `0x${string}`): string => fromHex(hex, { to: 'string', size: 32 });

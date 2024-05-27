@@ -1,7 +1,7 @@
 import { arbitrumSepolia, optimismSepolia, polygonAmoy, sepolia } from 'viem/chains';
 import { describe, expect, it } from 'vitest';
 
-import { solidityTimestampToDateTime, getEvmHttpClient, hexToString } from '~/pkg/evm/utils';
+import { solidityTimestampToDateTime, getEvmHttpClient, bytes32ToText, hexToString } from '~/pkg/evm/utils';
 import { generateApiKeyPair, getUniqueElements, getRanges, chunks } from '~/utils';
 
 describe('getUniqueElements', () => {
@@ -136,5 +136,18 @@ describe('generateApiKeyPair', () => {
 
     expect(secretKey.startsWith('sk_')).toBe(true);
     expect(secretKey.length).toBe(35);
+  });
+});
+
+describe('bytes32ToText', () => {
+  it('should work correctly', () => {
+    const cases: { bytes32: `0x${string}`; expected: string }[] = [
+      { bytes32: '0x53706f74696679204e474e000000000000000000000000000000000000000000', expected: 'Spotify NGN' },
+    ];
+
+    cases.forEach(({ expected, bytes32 }) => {
+      const result = bytes32ToText(bytes32);
+      expect(result).toEqual(expected);
+    });
   });
 });

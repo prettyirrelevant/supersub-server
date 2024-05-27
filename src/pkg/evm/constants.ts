@@ -1,5 +1,5 @@
 import { getAddress } from 'viem';
 
 export const CHUNK_SIZE = 3000;
-export const SUBSCRIPTION_PLUGIN_INIT_BLOCK = 7404445n;
-export const SUBSCRIPTION_PLUGIN_ADDRESS = getAddress('0xD3fc1484491b2db1758220246BB1A7414548d97e');
+export const SUBSCRIPTION_PLUGIN_INIT_BLOCK = 7525697n;
+export const SUBSCRIPTION_PLUGIN_ADDRESS = getAddress('0xdccd8dae6d56d17b0fbf735bb49fa58e0a2fd75e');

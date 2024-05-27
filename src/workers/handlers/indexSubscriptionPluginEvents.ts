@@ -1,5 +1,5 @@
-import { decodeEventLog, type Log } from 'viem';
 import { type Chain } from 'viem/chains';
+import { type Log } from 'viem';
 
 import {
   SUBSCRIPTION_PLUGIN_INIT_BLOCK,
@@ -7,7 +7,7 @@ import {
   SUBSCRIPTION_PLUGIN_ADDRESS,
   SubscriptionPluginAbi,
   getEvmHttpClient,
-  hexToString,
+  bytes32ToText,
   CHUNK_SIZE,
 } from '~/pkg/evm';
 import { getRanges } from '~/utils';
@@ -73,30 +73,29 @@ export const indexSubscriptionPluginEvents = async (chain: Chain) => {
 const handleProductCreated = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'ProductCreated'>,
 ) => {
-  const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
   await prisma.product.create({
     data: {
       token: {
         connectOrCreate: {
           create: {
-            address: decodedEvent.args.chargeToken,
+            address: event.args.chargeToken,
           },
           where: {
-            address: decodedEvent.args.chargeToken,
+            address: event.args.chargeToken,
           },
         },
       },
       creator: {
-        connect: { smartAccountAddress: decodedEvent.args.provider },
+        connect: { smartAccountAddress: event.args.provider },
       },
-      type: decodedEvent.args.productType === 0 ? 'RECURRING' : 'SUBSCRIPTION',
-      destinationChain: Number(decodedEvent.args.destinationChain),
-      onchainReference: Number(decodedEvent.args.productId),
-      receivingAddress: decodedEvent.args.receivingAddress,
-      description: decodedEvent.args.description,
-      name: hexToString(decodedEvent.args.name),
-      isActive: decodedEvent.args.isActive,
-      logoUrl: decodedEvent.args.logoUrl,
+      type: event.args.productType === 0 ? 'RECURRING' : 'SUBSCRIPTION',
+      destinationChain: Number(event.args.destinationChain),
+      onchainReference: Number(event.args.productId),
+      receivingAddress: event.args.receivingAddress,
+      name: bytes32ToText(event.args.name),
+      description: event.args.description,
+      isActive: event.args.isActive,
+      logoUrl: event.args.logoUrl,
     },
   });
 };
@@ -104,30 +103,28 @@ const handleProductCreated = async (
 const handleProductUpdated = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'ProductUpdated'>,
 ) => {
-  const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
   await prisma.product.update({
     data: {
-      destinationChain: Number(decodedEvent.args.destinationChain),
-      receivingAddress: decodedEvent.args.receivingAddress,
-      isActive: decodedEvent.args.isActive,
+      destinationChain: Number(event.args.destinationChain),
+      receivingAddress: event.args.receivingAddress,
+      isActive: event.args.isActive,
     },
-    where: { onchainReference: Number(decodedEvent.args.productId) },
+    where: { onchainReference: Number(event.args.productId) },
   });
 };
 
 const handlePlanCreated = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'PlanCreated'>,
 ) => {
-  const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
   await prisma.plan.create({
     data: {
       product: {
-        connect: { onchainReference: Number(decodedEvent.args.productId) },
+        connect: { onchainReference: Number(event.args.productId) },
       },
-      chargeInterval: Number(decodedEvent.args.chargeInterval),
-      onchainReference: Number(decodedEvent.args.planId),
-      price: decodedEvent.args.price.toString(),
-      isActive: decodedEvent.args.isActive,
+      chargeInterval: Number(event.args.chargeInterval),
+      onchainReference: Number(event.args.planId),
+      price: event.args.price.toString(),
+      isActive: event.args.isActive,
     },
   });
 };
@@ -135,35 +132,32 @@ const handlePlanCreated = async (
 const handlePlanUpdated = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'PlanUpdated'>,
 ) => {
-  const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
   await prisma.product.update({
-    where: { onchainReference: Number(decodedEvent.args.planId) },
-    data: { isActive: decodedEvent.args.isActive },
+    where: { onchainReference: Number(event.args.planId) },
+    data: { isActive: event.args.isActive },
   });
 };
 
 // const handleSubscriptionPlanChanged = async (
 //   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'SubscriptionPlanChanged'>,
 // ) => {
-//   const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
 //   await prisma.subscription.update({
-//     data: { plan: { connect: { onchainReference: Number(decodedEvent.args.planId) } } },
-//     where: { onchainReference: Number(decodedEvent.args.subscriptionId) },
+//     data: { plan: { connect: { onchainReference: Number(event.args.planId) } } },
+//     where: { onchainReference: Number(event.args.subscriptionId) },
 //   });
 // };
 
 const handleSubscribed = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'Subscribed'>,
 ) => {
-  const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
   await prisma.subscription.create({
     data: {
-      subscriber: { connect: { smartAccountAddress: decodedEvent.args.subscriber } },
-      product: { connect: { onchainReference: Number(decodedEvent.args.product) } },
-      subscriptionExpiry: solidityTimestampToDateTime(decodedEvent.args.endTime),
-      creator: { connect: { smartAccountAddress: decodedEvent.args.provider } },
-      plan: { connect: { onchainReference: Number(decodedEvent.args.plan) } },
-      onchainReference: Number(decodedEvent.args.subscriptionId),
+      subscriber: { connect: { smartAccountAddress: event.args.subscriber } },
+      product: { connect: { onchainReference: Number(event.args.product) } },
+      subscriptionExpiry: solidityTimestampToDateTime(event.args.endTime),
+      creator: { connect: { smartAccountAddress: event.args.provider } },
+      plan: { connect: { onchainReference: Number(event.args.plan) } },
+      onchainReference: Number(event.args.subscriptionId),
       isActive: true,
     },
   });
@@ -172,10 +166,9 @@ const handleSubscribed = async (
 const handleUnSubscribed = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'Subscribed'>,
 ) => {
-  const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
   await prisma.subscription.update({
     where: {
-      onchainReference: Number(decodedEvent.args.subscriptionId),
+      onchainReference: Number(event.args.subscriptionId),
     },
     data: {
       isActive: false,
@@ -186,33 +179,32 @@ const handleUnSubscribed = async (
 const handleSubscriptionCharged = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'SubscriptionCharged'>,
 ) => {
-  const decodedEvent = decodeEventLog({ abi: SubscriptionPluginAbi, ...event });
   const subscription = await prisma.subscription.findUnique({
-    where: { onchainReference: Number(decodedEvent.args.subscriptionId) },
+    where: { onchainReference: Number(event.args.subscriptionId) },
     include: { product: true },
   });
 
   await prisma.transaction.createMany({
     data: [
       {
-        subscriptionOnchainReference: Number(decodedEvent.args.subscriptionId),
+        subscriptionOnchainReference: Number(event.args.subscriptionId),
         tokenAddress: subscription?.product.tokenAddress as string,
-        amount: decodedEvent.args.amount.toString(),
         onchainReference: event.transactionHash,
         recipient: subscription?.creatorAddress,
         narration: 'Subscription fee deducted',
-        sender: decodedEvent.args.subscriber,
+        amount: event.args.amount.toString(),
+        sender: event.args.subscriber,
         type: 'WITHDRAWAL',
         status: 'SUCCESS',
       },
       {
-        subscriptionOnchainReference: Number(decodedEvent.args.subscriptionId),
+        subscriptionOnchainReference: Number(event.args.subscriptionId),
         tokenAddress: subscription?.product.tokenAddress as string,
-        amount: decodedEvent.args.amount.toString(),
         onchainReference: event.transactionHash,
         recipient: subscription?.creatorAddress,
         narration: 'Subscription fee received',
-        sender: decodedEvent.args.subscriber,
+        amount: event.args.amount.toString(),
+        sender: event.args.subscriber,
         status: 'SUCCESS',
         type: 'DEPOSIT',
       },
@@ -220,7 +212,7 @@ const handleSubscriptionCharged = async (
   });
 
   await prisma.subscription.update({
-    data: { lastChargeDate: solidityTimestampToDateTime(decodedEvent.args.timestamp) },
-    where: { onchainReference: Number(decodedEvent.args.subscriptionId) },
+    data: { lastChargeDate: solidityTimestampToDateTime(event.args.timestamp) },
+    where: { onchainReference: Number(event.args.subscriptionId) },
   });
 };

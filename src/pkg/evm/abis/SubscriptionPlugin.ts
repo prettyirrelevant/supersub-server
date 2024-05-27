@@ -6,6 +6,11 @@ export const SubscriptionPluginAbi = [
         name: 'chainId',
         type: 'uint256',
       },
+      {
+        internalType: 'address',
+        name: '_bridge',
+        type: 'address',
+      },
     ],
     stateMutability: 'nonpayable',
     type: 'constructor',
@@ -450,27 +455,11 @@ export const SubscriptionPluginAbi = [
     outputs: [],
   },
   {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'productId',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        type: 'uint256',
-        name: 'planId',
-      },
-      {
-        internalType: 'uint256',
-        name: 'subscriptionId',
-        type: 'uint256',
-      },
-    ],
     name: 'changeSubscriptionPlan',
-    stateMutability: 'nonpayable',
+    stateMutability: 'pure',
     type: 'function',
     outputs: [],
+    inputs: [],
   },
   {
     inputs: [
@@ -553,6 +542,114 @@ export const SubscriptionPluginAbi = [
     ],
     stateMutability: 'nonpayable',
     name: 'createProduct',
+    type: 'function',
+    outputs: [],
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        type: 'bytes32',
+        name: '_name',
+      },
+      {
+        internalType: 'string',
+        name: '_description',
+        type: 'string',
+      },
+      {
+        internalType: 'string',
+        name: '_logoUrl',
+        type: 'string',
+      },
+      {
+        internalType: 'enum SubscriptionPlugin.ProductType',
+        name: '_type',
+        type: 'uint8',
+      },
+      {
+        internalType: 'address',
+        name: '_chargeToken',
+        type: 'address',
+      },
+      {
+        name: '_receivingAddress',
+        internalType: 'address',
+        type: 'address',
+      },
+      {
+        name: '_destinationChain',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      {
+        components: [
+          {
+            internalType: 'uint256',
+            type: 'uint256',
+            name: 'price',
+          },
+          {
+            internalType: 'uint32',
+            name: 'chargeInterval',
+            type: 'uint32',
+          },
+        ],
+        internalType: 'struct SubscriptionPlugin.InitPlanParam[]',
+        type: 'tuple[]',
+        name: '_plans',
+      },
+    ],
+    name: 'createProductWithPlans',
+    stateMutability: 'nonpayable',
+    type: 'function',
+    outputs: [],
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        type: 'bytes32',
+        name: '_name',
+      },
+      {
+        internalType: 'string',
+        name: '_description',
+        type: 'string',
+      },
+      {
+        internalType: 'string',
+        name: '_logoUrl',
+        type: 'string',
+      },
+      {
+        internalType: 'address',
+        name: '_chargeToken',
+        type: 'address',
+      },
+      {
+        name: '_receivingAddress',
+        internalType: 'address',
+        type: 'address',
+      },
+      {
+        name: '_destinationChain',
+        internalType: 'uint256',
+        type: 'uint256',
+      },
+      {
+        name: '_chargeInterval',
+        internalType: 'uint32',
+        type: 'uint32',
+      },
+      {
+        internalType: 'uint256',
+        type: 'uint256',
+        name: '_price',
+      },
+    ],
+    name: 'createRecurringSubscription',
+    stateMutability: 'nonpayable',
     type: 'function',
     outputs: [],
   },

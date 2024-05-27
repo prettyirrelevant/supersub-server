@@ -1,15 +1,19 @@
-import { beforeEach, beforeAll, afterEach, describe, afterAll, expect, it, vi } from 'vitest';
+import { beforeEach, afterEach, describe, afterAll, expect, it, vi } from 'vitest';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { PrivyClient } from '@privy-io/server-auth';
 import { polygonAmoy } from 'viem/chains';
+import { faker } from '@faker-js/faker';
 
+import { indexSubscriptionPluginEvents } from '~/workers/handlers/indexSubscriptionPluginEvents';
 import { fetchSmartAccounts } from '~/workers/handlers/fetchSmartAccounts';
 import { enrichERC20Tokens } from '~/workers/handlers/enrichTokens';
+import { getEvmHttpClient } from '~/pkg/evm';
 import { prisma } from '~/pkg/db';
 
 import { createFakeTokens } from '../utils';
 
 describe('enrichERC20Tokens', () => {
-  beforeAll(async () => {
+  beforeEach(async () => {
     await createFakeTokens();
   });
 
@@ -118,5 +122,80 @@ describe('fetchSmartAccounts', () => {
       emailAddress: 'user2@example.com',
       metadata: { privyDid: '2' },
     });
+  });
+});
+
+vi.mock('~/pkg/db', () => {
+  const prisma = new PrismaClient();
+  prisma.product.create = vi.fn();
+
+  return { prisma };
+});
+
+describe('indexSubscriptionPluginEvents', () => {
+  beforeEach(async () => {
+    prisma.product.create.mockImplementation(async (args: { data: Prisma.ProductCreateInput }) => {
+      const { data } = args;
+      const { prisma: originalPrisma } = await vi.importActual<typeof import('~/pkg/db')>('~/pkg/db');
+
+      await prisma.account.create({
+        data: {
+          metadata: {
+            privyDid: `did:privy:${faker.string.numeric(7)}`,
+          },
+          smartAccountAddress: data.creator.connect?.smartAccountAddress as string,
+          eoaAddress: faker.finance.ethereumAddress(),
+          emailAddress: faker.internet.email(),
+        },
+      });
+
+      await originalPrisma.product.create({ data });
+    });
+  });
+
+  afterEach(async () => {
+    vi.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    await prisma.plan.deleteMany();
+    await prisma.cache.deleteMany();
+    await prisma.product.deleteMany();
+    await prisma.account.deleteMany();
+  });
+
+  it('should index all events properly', async () => {
+    await indexSubscriptionPluginEvents(polygonAmoy);
+    const client = getEvmHttpClient(polygonAmoy);
+    const latestBlock = await client.getBlockNumber();
+
+    const products = await prisma.product.findMany({
+      select: {
+        destinationChain: true,
+        onchainReference: true,
+        receivingAddress: true,
+        creatorAddress: true,
+        tokenAddress: true,
+        description: true,
+        isActive: true,
+        logoUrl: true,
+        name: true,
+        type: true,
+      },
+    });
+    const plans = await prisma.plan.findMany({
+      select: {
+        productOnchainReference: true,
+        onchainReference: true,
+        chargeInterval: true,
+        isActive: true,
+        price: true,
+      },
+    });
+    const lastQueriedBlockCache = await prisma.cache.findUnique({ where: { key: 'last-queried-block' } });
+
+    expect(products[0]).toMatchSnapshot();
+    expect(plans[0]).toMatchSnapshot();
+    expect(Number(lastQueriedBlockCache?.value as string)).toBeCloseTo(Number(latestBlock));
   });
 });
