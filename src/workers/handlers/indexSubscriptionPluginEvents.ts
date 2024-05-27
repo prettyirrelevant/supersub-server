@@ -150,11 +150,15 @@ const handlePlanUpdated = async (
 const handleSubscribed = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'Subscribed'>,
 ) => {
+  const now = new Date();
+  const oneHundredYearsFromNow = new Date(now.getFullYear() + 100, now.getMonth(), now.getDate());
+
   await prisma.subscription.create({
     data: {
+      subscriptionExpiry:
+        event.args.endTime === 0n ? oneHundredYearsFromNow : solidityTimestampToDateTime(event.args.endTime),
       subscriber: { connect: { smartAccountAddress: event.args.subscriber } },
       product: { connect: { onchainReference: Number(event.args.product) } },
-      subscriptionExpiry: solidityTimestampToDateTime(event.args.endTime),
       creator: { connect: { smartAccountAddress: event.args.provider } },
       plan: { connect: { onchainReference: Number(event.args.plan) } },
       onchainReference: Number(event.args.subscriptionId),

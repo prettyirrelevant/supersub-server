@@ -8,20 +8,37 @@ import { chunks } from '~/utils';
 
 export const notifyUsersForUpcomingSubscriptionRenewal = async () => {
   const now = dayjs();
-  const nextDay = now.add(24, 'hour');
+  const in24Hours = now.add(24, 'hours');
 
-  const activeSubscriptions = await prisma.subscription.findMany({
-    include: { product: { include: { token: true } }, subscriber: true, plan: true },
-    where: { subscriptionExpiry: { gte: nextDay.toDate() }, isActive: true },
+  const upcomingRenewals = await prisma.subscription.findMany({
+    where: {
+      OR: [
+        {
+          createdAt: { lt: in24Hours.toDate() },
+          lastChargeDate: null,
+        },
+        {
+          lastChargeDate: { lt: in24Hours.subtract(1, 'seconds').toDate() },
+        },
+      ],
+      subscriptionExpiry: { gt: in24Hours.toDate() },
+      product: { isActive: true },
+      plan: { isActive: true },
+      isActive: true,
+    },
+    include: {
+      subscriber: true,
+      product: true,
+      plan: true,
+    },
   });
 
-  const subscriptionsForRenewal = activeSubscriptions.filter((subscription) => {
-    const lastChargeDate = dayjs(subscription.lastChargeDate);
-    const nextChargeDate = lastChargeDate.add(subscription.plan.chargeInterval, 'second');
-    return nextChargeDate.isBefore(nextDay) && nextChargeDate.isAfter(now);
+  const subscribersToNotify = upcomingRenewals.filter((sub) => {
+    if (!sub.lastChargeDate) return true;
+    return sub.lastChargeDate < in24Hours.subtract(sub.plan.chargeInterval, 'seconds').toDate();
   });
 
-  const payloads = subscriptionsForRenewal.map((subscription) => ({
+  const payloads = subscribersToNotify.map((subscription) => ({
     text: getEmailBodyTemplate({
       amount: formatUnits(BigInt(subscription.plan.price.toString()), subscription.product.token.decimals as number),
       recipientAddress: subscription.product.receivingAddress,
