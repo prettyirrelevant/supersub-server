@@ -138,6 +138,8 @@ model Subscription {
   subscriberAddress String
   subscriber        Account       @relation(name: "subscribedSubscriptions", fields: [subscriberAddress], references: [smartAccountAddress])
   Transaction       Transaction[]
+
+  @@unique([subscriberAddress, productOnchainReference])
 }
 
 // Tokens
