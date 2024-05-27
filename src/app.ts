@@ -1,5 +1,6 @@
 import express, { type NextFunction, type Application, type Response, type Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import { Prisma } from '@prisma/client';
 import helmet from 'helmet';
 import cors from 'cors';
 
@@ -73,6 +74,68 @@ application.post(
       where: { accountAddress: address },
     });
     return res.status(StatusCodes.OK).json({ data: { publicKey: publicKey, secretKey: secretKey } });
+  },
+);
+
+application.get(
+  '/api/transactions',
+  privyAuthenticationMiddleware,
+  async (req: Request, res: Response<SuccessResponse>) => {
+    const address = req.auth.address;
+    const { offset = '1', limit = '10', reference, product } = req.query;
+
+    const where: Prisma.TransactionWhereInput = {
+      AND: [{ OR: [{ sender: address }, { recipient: address }] }],
+    };
+
+    if (reference) {
+      where.AND.push({ subscriptionOnchainReference: parseInt(reference as string) });
+    }
+    if (product) {
+      where.AND.push({ subscription: { product: { name: product } } });
+    }
+
+    const skip = (parseInt(offset as string, 10) - 1) * parseInt(limit as string, 10);
+    const take = parseInt(limit as string, 10);
+    const transactions = await prisma.transaction.findMany({
+      where: where,
+      take: take,
+      skip: skip,
+    });
+    return res.status(StatusCodes.OK).json({ data: { transactions: transactions } });
+  },
+);
+
+application.get(
+  '/api/subscriptions',
+  privyAuthenticationMiddleware,
+  async (req: Request, res: Response<SuccessResponse>) => {
+    const address = req.auth.address;
+    const { isActive } = req.query;
+
+    const where: Prisma.SubscriptionWhereInput = {
+      subscriberAddress: address,
+    };
+    if (isActive === 'true') {
+      where.isActive = true;
+    }
+
+    const subscriptions = await prisma.subscription.findMany({
+      include: { Transaction: true, product: true },
+      where: where,
+    });
+
+    return res.status(StatusCodes.OK).json({ data: { subscriptions: subscriptions } });
+  },
+);
+
+application.get(
+  '/api/products',
+  privyAuthenticationMiddleware,
+  async (req: Request, res: Response<SuccessResponse>) => {
+    const address = req.auth.address;
+    const products = await prisma.product.findMany({ where: { creatorAddress: address }, include: { plans: true } });
+    return res.status(StatusCodes.OK).json({ data: { products: products } });
   },
 );
 
