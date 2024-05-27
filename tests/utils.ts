@@ -24,7 +24,7 @@ export const createFakeAccounts = async (n: number) => {
     });
   }
 
-  return await prisma.account.createManyAndReturn({ data: payloads });
+  return await prisma.account.createManyAndReturn({ skipDuplicates: true, data: payloads });
 };
 
 export const createFakeProducts = async (n: number, accounts: Account[]) => {
@@ -43,7 +43,7 @@ export const createFakeProducts = async (n: number, accounts: Account[]) => {
     });
   }
 
-  return await prisma.product.createManyAndReturn({ data: payloads });
+  return await prisma.product.createManyAndReturn({ skipDuplicates: true, data: payloads });
 };
 
 export const createFakePlans = async (n: number, products: Product[]) => {
@@ -57,7 +57,7 @@ export const createFakePlans = async (n: number, products: Product[]) => {
     });
   }
 
-  return await prisma.plan.createManyAndReturn({ data: payloads });
+  return await prisma.plan.createManyAndReturn({ skipDuplicates: true, data: payloads });
 };
 
 export const createFakeSubscriptions = async (n: number, accounts: Account[], products: Product[], plans: Plan[]) => {
@@ -74,7 +74,7 @@ export const createFakeSubscriptions = async (n: number, accounts: Account[], pr
     });
   }
 
-  return await prisma.subscription.createManyAndReturn({ data: payloads });
+  return await prisma.subscription.createManyAndReturn({ skipDuplicates: true, data: payloads });
 };
 
 export const createFakeTokens = async () => {
@@ -100,7 +100,7 @@ export const createFakeTransactions = async (n: number, accounts: Account[]) => 
     });
   }
 
-  return await prisma.transaction.createManyAndReturn({ data: payloads });
+  return await prisma.transaction.createManyAndReturn({ skipDuplicates: true, data: payloads });
 };
 
 export const createPrivyAccessToken = async (opts: { privateKey: jose.KeyLike; privyDid: string }) =>
