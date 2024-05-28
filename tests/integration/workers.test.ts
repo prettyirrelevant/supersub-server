@@ -17,9 +17,8 @@ describe('enrichERC20Tokens', () => {
     await createFakeTokens();
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await prisma.token.deleteMany();
-    await prisma.$disconnect();
   });
 
   it('should update the decimals of tokens with valid results', async () => {
