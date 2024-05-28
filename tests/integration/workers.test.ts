@@ -1,4 +1,4 @@
-import { beforeEach, afterEach, describe, afterAll, expect, it, vi } from 'vitest';
+import { beforeEach, afterEach, describe, afterAll, expect, assert, it, vi } from 'vitest';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { PrivyClient } from '@privy-io/server-auth';
 import { polygonAmoy } from 'viem/chains';
@@ -195,6 +195,6 @@ describe('indexSubscriptionPluginEvents', () => {
 
     expect(products[0]).toMatchSnapshot();
     expect(plans[0]).toMatchSnapshot();
-    expect(Number(lastQueriedBlockCache?.value as string)).toBeCloseTo(Number(latestBlock), 3); // a difference of 3 mined blocks.
+    assert.closeTo(Number(lastQueriedBlockCache?.value as string), Number(latestBlock), 3); // a difference of 3 mined blocks.
   });
 });
