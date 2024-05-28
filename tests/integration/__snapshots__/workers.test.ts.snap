@@ -58,7 +58,7 @@ exports[`indexSubscriptionPluginEvents > should index all events properly 3`] = 
     "planOnchainReference": 1,
     "productOnchainReference": 1,
     "subscriberAddress": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
-    "subscriptionExpiry": 2524-01-31T23:00:00.000Z,
+    "subscriptionExpiry": 2500-12-01T00:00:00.000Z,
   },
 ]
 `;

@@ -1,5 +1,6 @@
 import { type Chain } from 'viem/chains';
 import { type Log } from 'viem';
+import dayjs from 'dayjs';
 
 import {
   SUBSCRIPTION_PLUGIN_INIT_BLOCK,
@@ -150,10 +151,11 @@ const handlePlanUpdated = async (
 const handleSubscribed = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'Subscribed'>,
 ) => {
-  const futureDate = new Date(2024 + 500, 1, 1);
+  const futureDate = dayjs.unix(16754083200); // 01/12/2500
   await prisma.subscription.create({
     data: {
-      subscriptionExpiry: event.args.endTime === 0n ? futureDate : solidityTimestampToDateTime(event.args.endTime),
+      subscriptionExpiry:
+        event.args.endTime === 0n ? futureDate.toDate() : solidityTimestampToDateTime(event.args.endTime),
       subscriber: { connect: { smartAccountAddress: event.args.subscriber } },
       product: { connect: { onchainReference: Number(event.args.product) } },
       creator: { connect: { smartAccountAddress: event.args.provider } },
