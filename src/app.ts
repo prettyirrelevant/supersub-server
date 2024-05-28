@@ -121,7 +121,7 @@ application.get(
     }
 
     const subscriptions = await prisma.subscription.findMany({
-      include: { Transaction: true, product: true },
+      include: { transactions: true, product: true },
       where: where,
     });
 

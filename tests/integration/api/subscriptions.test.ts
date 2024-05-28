@@ -99,6 +99,6 @@ describe('Subscriptions', async () => {
       .expect('Content-Type', /json/)
       .expect(200);
 
-    expect(response.body.data.subscriptions.every((sub) => sub.Transaction && sub.product)).toBe(true);
+    expect(response.body.data.subscriptions.every((sub) => sub.transactions && sub.product)).toBe(true);
   });
 });

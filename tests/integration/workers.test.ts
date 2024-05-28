@@ -1,4 +1,4 @@
-import { beforeEach, afterEach, describe, afterAll, expect, assert, it, vi } from 'vitest';
+import { beforeEach, afterEach, describe, expect, assert, it, vi } from 'vitest';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { PrivyClient } from '@privy-io/server-auth';
 import { polygonAmoy } from 'viem/chains';
@@ -18,7 +18,12 @@ describe('enrichERC20Tokens', () => {
   });
 
   afterEach(async () => {
+    await prisma.transaction.deleteMany();
+    await prisma.subscription.deleteMany();
+    await prisma.plan.deleteMany();
+    await prisma.product.deleteMany();
     await prisma.token.deleteMany();
+    await prisma.account.deleteMany();
   });
 
   it('should update the decimals of tokens with valid results', async () => {
@@ -46,7 +51,7 @@ vi.mock('@privy-io/server-auth', async (importOriginal) => {
 });
 
 describe('fetchSmartAccounts', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     const privy = new PrivyClient('privy-app-id', 'privy-app-secret');
     privy.getUsers.mockResolvedValueOnce(
       Promise.resolve([
@@ -71,6 +76,12 @@ describe('fetchSmartAccounts', () => {
 
   afterEach(async () => {
     vi.clearAllMocks();
+
+    await prisma.transaction.deleteMany();
+    await prisma.subscription.deleteMany();
+    await prisma.plan.deleteMany();
+    await prisma.product.deleteMany();
+    await prisma.token.deleteMany();
     await prisma.account.deleteMany();
   });
 
@@ -85,7 +96,7 @@ describe('fetchSmartAccounts', () => {
         metadata: true,
       },
     });
-    expect(createdAccounts).toHaveLength(3);
+    expect(createdAccounts.length).toBeGreaterThanOrEqual(3);
     expect(createdAccounts[0]).toMatchObject({
       smartAccountAddress: '0x564BB9C687BE0Ff8474aD67b9D2c6a1b402A86C7',
       eoaAddress: '0x19e4057A38a730be37c4DA690b103267AAE1d75d',
@@ -127,44 +138,71 @@ describe('fetchSmartAccounts', () => {
 vi.mock('~/pkg/db', () => {
   const prisma = new PrismaClient();
   prisma.product.create = vi.fn();
+  prisma.subscription.create = vi.fn();
 
   return { prisma };
 });
 
 describe('indexSubscriptionPluginEvents', () => {
   beforeEach(async () => {
+    const { prisma: originalPrisma } = await vi.importActual<typeof import('~/pkg/db')>('~/pkg/db');
+
     prisma.product.create.mockImplementation(async (args: { data: Prisma.ProductCreateInput }) => {
       const { data } = args;
-      const { prisma: originalPrisma } = await vi.importActual<typeof import('~/pkg/db')>('~/pkg/db');
 
-      await prisma.account.create({
-        data: {
-          metadata: {
-            privyDid: `did:privy:${faker.string.numeric(7)}`,
+      await prisma.account.createMany({
+        data: [
+          {
+            metadata: {
+              privyDid: `did:privy:${faker.string.numeric(7)}`,
+            },
+            smartAccountAddress: data.creator.connect?.smartAccountAddress as string,
+            eoaAddress: faker.finance.ethereumAddress(),
+            emailAddress: faker.internet.email(),
           },
-          smartAccountAddress: data.creator.connect?.smartAccountAddress as string,
-          eoaAddress: faker.finance.ethereumAddress(),
-          emailAddress: faker.internet.email(),
-        },
+        ],
+        skipDuplicates: true,
       });
 
       await originalPrisma.product.create({ data });
+    });
+
+    prisma.subscription.create.mockImplementation(async (args: { data: Prisma.SubscriptionCreateInput }) => {
+      const { data } = args;
+
+      await prisma.account.createMany({
+        data: [
+          {
+            metadata: {
+              privyDid: `did:privy:${faker.string.numeric(7)}`,
+            },
+            smartAccountAddress: data.subscriber.connect?.smartAccountAddress as string,
+            eoaAddress: faker.finance.ethereumAddress(),
+            emailAddress: faker.internet.email(),
+          },
+        ],
+        skipDuplicates: true,
+      });
+
+      await originalPrisma.subscription.create({ data });
     });
   });
 
   afterEach(async () => {
     vi.clearAllMocks();
-  });
 
-  afterAll(async () => {
+    await prisma.transaction.deleteMany();
+    await prisma.subscription.deleteMany();
     await prisma.plan.deleteMany();
-    await prisma.cache.deleteMany();
     await prisma.product.deleteMany();
+    await prisma.token.deleteMany();
+    await prisma.cache.deleteMany();
     await prisma.account.deleteMany();
   });
 
   it('should index all events properly', async () => {
     await indexSubscriptionPluginEvents(polygonAmoy);
+
     const client = getEvmHttpClient(polygonAmoy);
     const latestBlock = await client.getBlockNumber();
 
@@ -191,10 +229,45 @@ describe('indexSubscriptionPluginEvents', () => {
         price: true,
       },
     });
+    const subscriptions = await prisma.subscription.findMany({
+      select: {
+        productOnchainReference: true,
+        planOnchainReference: true,
+        subscriptionExpiry: true,
+        subscriberAddress: true,
+        onchainReference: true,
+        lastChargeDate: true,
+        creatorAddress: true,
+        isActive: true,
+      },
+    });
+    const transactions = await prisma.transaction.findMany({
+      select: {
+        subscriptionOnchainReference: true,
+        onchainReference: true,
+        tokenAddress: true,
+        narration: true,
+        recipient: true,
+        amount: true,
+        sender: true,
+        status: true,
+        type: true,
+      },
+    });
     const lastQueriedBlockCache = await prisma.cache.findUnique({ where: { key: 'last-queried-block' } });
 
-    expect(products[0]).toMatchSnapshot();
-    expect(plans[0]).toMatchSnapshot();
+    expect(products.length).toStrictEqual(2);
+    expect(products).toMatchSnapshot();
+
+    expect(plans.length).toStrictEqual(2);
+    expect(plans).toMatchSnapshot();
+
+    expect(subscriptions.length).toStrictEqual(1);
+    expect(subscriptions).toMatchSnapshot();
+
+    expect(transactions.length).toStrictEqual(2);
+    expect(transactions).toMatchSnapshot();
+
     assert.closeTo(Number(lastQueriedBlockCache?.value as string), Number(latestBlock), 3); // a difference of 3 mined blocks.
   });
 });

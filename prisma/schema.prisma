@@ -26,8 +26,8 @@ model Account {
 
   apiKey                  ApiKey?
   products                Product[]
-  ownedSubscriptions      Subscription[] @relation("ownedSubscriptions")
-  subscribedSubscriptions Subscription[] @relation("subscribedSubscriptions")
+  createdSubscriptions    Subscription[] @relation("creator")
+  subscribedSubscriptions Subscription[] @relation("subscriber")
 
   @@index([smartAccountAddress], type: Hash)
 }
@@ -102,7 +102,7 @@ model Transaction {
   sender           String?
   recipient        String?
   type             TransactionType
-  onchainReference String            @unique
+  onchainReference String
   status           TransactionStatus
 
   tokenAddress String
@@ -127,7 +127,7 @@ model Subscription {
   updatedAt DateTime @updatedAt
 
   creatorAddress String
-  creator        Account @relation(name: "ownedSubscriptions", fields: [creatorAddress], references: [smartAccountAddress])
+  creator        Account @relation("creator", fields: [creatorAddress], references: [smartAccountAddress])
 
   planOnchainReference Int
   plan                 Plan @relation(fields: [planOnchainReference], references: [onchainReference])
@@ -136,8 +136,9 @@ model Subscription {
   product                 Product @relation(fields: [productOnchainReference], references: [onchainReference])
 
   subscriberAddress String
-  subscriber        Account       @relation(name: "subscribedSubscriptions", fields: [subscriberAddress], references: [smartAccountAddress])
-  Transaction       Transaction[]
+  subscriber        Account @relation(name: "subscriber", fields: [subscriberAddress], references: [smartAccountAddress])
+
+  transactions Transaction[]
 
   @@unique([subscriberAddress, productOnchainReference])
 }

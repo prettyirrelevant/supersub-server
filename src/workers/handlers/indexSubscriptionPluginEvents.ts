@@ -150,13 +150,10 @@ const handlePlanUpdated = async (
 const handleSubscribed = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'Subscribed'>,
 ) => {
-  const now = new Date();
-  const oneHundredYearsFromNow = new Date(now.getFullYear() + 100, now.getMonth(), now.getDate());
-
+  const futureDate = new Date(2024 + 500, 1, 1);
   await prisma.subscription.create({
     data: {
-      subscriptionExpiry:
-        event.args.endTime === 0n ? oneHundredYearsFromNow : solidityTimestampToDateTime(event.args.endTime),
+      subscriptionExpiry: event.args.endTime === 0n ? futureDate : solidityTimestampToDateTime(event.args.endTime),
       subscriber: { connect: { smartAccountAddress: event.args.subscriber } },
       product: { connect: { onchainReference: Number(event.args.product) } },
       creator: { connect: { smartAccountAddress: event.args.provider } },
@@ -191,22 +188,34 @@ const handleSubscriptionCharged = async (
   await prisma.transaction.createMany({
     data: [
       {
+        narration:
+          subscription?.product.type === 'SUBSCRIPTION'
+            ? 'Subscription fee charged'
+            : `Recurring payment made to ${subscription?.product.receivingAddress}`,
+        recipient:
+          subscription?.product.type === 'SUBSCRIPTION'
+            ? subscription?.creatorAddress
+            : subscription?.product.receivingAddress,
         subscriptionOnchainReference: Number(event.args.subscriptionId),
         tokenAddress: subscription?.product.tokenAddress as string,
         onchainReference: event.transactionHash,
-        recipient: subscription?.creatorAddress,
-        narration: 'Subscription fee deducted',
         amount: event.args.amount.toString(),
         sender: event.args.subscriber,
         type: 'WITHDRAWAL',
         status: 'SUCCESS',
       },
       {
+        narration:
+          subscription?.product.type === 'SUBSCRIPTION'
+            ? 'Subscription fee received'
+            : `Recurring payment received from ${event.args.subscriber}`,
+        recipient:
+          subscription?.product.type === 'SUBSCRIPTION'
+            ? subscription?.creatorAddress
+            : subscription?.product.receivingAddress,
         subscriptionOnchainReference: Number(event.args.subscriptionId),
         tokenAddress: subscription?.product.tokenAddress as string,
         onchainReference: event.transactionHash,
-        recipient: subscription?.creatorAddress,
-        narration: 'Subscription fee received',
         amount: event.args.amount.toString(),
         sender: event.args.subscriber,
         status: 'SUCCESS',
