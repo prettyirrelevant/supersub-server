@@ -63,4 +63,4 @@ jobs:
           PRIVATE_KEY: 'private-key'
           LOG_LEVEL: 'info'
           DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/test'
-        run: 'npm test --coverage'
+        run: 'npm run test:cov'
