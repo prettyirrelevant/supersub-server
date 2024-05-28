@@ -7,6 +7,7 @@ export default defineConfig({
       exclude: ['**/node_modules/**', '**/.eslintrc.cjs'],
     },
     setupFiles: ['dotenv/config'],
+    fileParallelism: false,
     testTimeout: 10_000,
     restoreMocks: true,
     globals: true,
