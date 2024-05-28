@@ -256,16 +256,16 @@ describe('indexSubscriptionPluginEvents', () => {
     });
     const lastQueriedBlockCache = await prisma.cache.findUnique({ where: { key: 'last-queried-block' } });
 
-    expect(products.length).toStrictEqual(2);
+    expect(products.length).toStrictEqual(3);
     expect(products).toMatchSnapshot();
 
-    expect(plans.length).toStrictEqual(2);
+    expect(plans.length).toStrictEqual(4);
     expect(plans).toMatchSnapshot();
 
-    expect(subscriptions.length).toStrictEqual(1);
+    expect(subscriptions.length).toStrictEqual(2);
     expect(subscriptions).toMatchSnapshot();
 
-    expect(transactions.length).toStrictEqual(2);
+    expect(transactions.length).toStrictEqual(4);
     expect(transactions).toMatchSnapshot();
 
     assert.closeTo(Number(lastQueriedBlockCache?.value as string), Number(latestBlock), 3); // a difference of 3 mined blocks.
