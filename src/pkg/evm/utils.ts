@@ -5,6 +5,7 @@ import {
 import { createPublicClient, fromHex, http } from 'viem';
 import { getChain } from '@alchemy/aa-core';
 import { type Chain } from 'viem/chains';
+import dayjs from 'dayjs';
 
 export const getEvmHttpClient = (chain: Chain) => {
   return createPublicClient({ transport: http(), chain });
@@ -37,7 +38,7 @@ export const getMultiOwnerModularAccountAddresses = async (chain: Chain, owners:
 export const hexToString = (hex: `0x${string}`): string => fromHex(hex, 'string');
 
 export const solidityTimestampToDateTime = (ts: bigint): Date => {
-  return new Date(Number(ts) * 1000);
+  return dayjs.unix(Number(ts)).toDate();
 };
 
 export const bytes32ToText = (hex: `0x${string}`): string => fromHex(hex, { to: 'string', size: 32 });

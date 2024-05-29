@@ -94,11 +94,11 @@ exports[`indexSubscriptionPluginEvents > should index all events properly 3`] = 
     "planOnchainReference": 1,
     "productOnchainReference": 1,
     "subscriberAddress": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
-    "subscriptionExpiry": 2024-09-05T16:49:49.000Z,
+    "subscriptionExpiry": 1970-01-01T00:00:00.000Z,
   },
   {
     "creatorAddress": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
-    "isActive": true,
+    "isActive": false,
     "lastChargeDate": 2024-05-29T02:20:27.000Z,
     "onchainReference": 2,
     "planOnchainReference": 4,
@@ -111,17 +111,6 @@ exports[`indexSubscriptionPluginEvents > should index all events properly 3`] = 
 
 exports[`indexSubscriptionPluginEvents > should index all events properly 4`] = `
 [
-  {
-    "amount": "500000000000000000",
-    "narration": "Subscription fee received",
-    "onchainReference": "0x67ee590c8e4dea9e45fe869573ae36968f54a4644cc3a724cf77c88c2ef266fb",
-    "recipient": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
-    "sender": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
-    "status": "SUCCESS",
-    "subscriptionOnchainReference": 2,
-    "tokenAddress": "0x0Fd9e8d3aF1aaee056EB9e802c3A762a667b1904",
-    "type": "DEPOSIT",
-  },
   {
     "amount": "500000000000000000",
     "narration": "Recurring payment made to 0xF65330dC75e32B20Be62f503a337cD1a072f898f",
@@ -176,6 +165,17 @@ exports[`indexSubscriptionPluginEvents > should index all events properly 4`] = 
     "subscriptionOnchainReference": 2,
     "tokenAddress": "0x0Fd9e8d3aF1aaee056EB9e802c3A762a667b1904",
     "type": "WITHDRAWAL",
+  },
+  {
+    "amount": "500000000000000000",
+    "narration": "Subscription fee received",
+    "onchainReference": "0x67ee590c8e4dea9e45fe869573ae36968f54a4644cc3a724cf77c88c2ef266fb",
+    "recipient": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
+    "sender": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
+    "status": "SUCCESS",
+    "subscriptionOnchainReference": 2,
+    "tokenAddress": "0x0Fd9e8d3aF1aaee056EB9e802c3A762a667b1904",
+    "type": "DEPOSIT",
   },
 ]
 `;

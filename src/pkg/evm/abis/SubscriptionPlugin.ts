@@ -307,6 +307,31 @@ export const SubscriptionPluginAbi = [
     inputs: [
       {
         internalType: 'address',
+        name: 'subscriber',
+        type: 'address',
+        indexed: true,
+      },
+      {
+        internalType: 'uint256',
+        type: 'uint256',
+        indexed: true,
+        name: 'id',
+      },
+      {
+        internalType: 'uint256',
+        name: 'endTime',
+        type: 'uint256',
+        indexed: false,
+      },
+    ],
+    name: 'SubscriptionEndTimeUpdated',
+    anonymous: false,
+    type: 'event',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
         type: 'address',
         indexed: true,
         name: 'user',
@@ -644,11 +669,16 @@ export const SubscriptionPluginAbi = [
       },
       {
         internalType: 'uint256',
+        name: '_endTime',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
         type: 'uint256',
         name: '_price',
       },
     ],
-    name: 'createRecurringSubscription',
+    name: 'createRecurringPayment',
     stateMutability: 'nonpayable',
     type: 'function',
     outputs: [],
@@ -680,62 +710,6 @@ export const SubscriptionPluginAbi = [
     inputs: [],
   },
   {
-    outputs: [
-      {
-        components: [
-          {
-            internalType: 'uint256',
-            name: 'subscriptionId',
-            type: 'uint256',
-          },
-          {
-            internalType: 'uint256',
-            name: 'product',
-            type: 'uint256',
-          },
-          {
-            internalType: 'address',
-            name: 'provider',
-            type: 'address',
-          },
-          {
-            internalType: 'uint256',
-            type: 'uint256',
-            name: 'plan',
-          },
-          {
-            internalType: 'uint256',
-            name: 'lastChargeDate',
-            type: 'uint256',
-          },
-          {
-            internalType: 'uint256',
-            name: 'endTime',
-            type: 'uint256',
-          },
-          {
-            internalType: 'bool',
-            name: 'isActive',
-            type: 'bool',
-          },
-        ],
-        internalType: 'struct SubscriptionPlugin.UserSubscription[]',
-        name: 'subscriptions',
-        type: 'tuple[]',
-      },
-    ],
-    inputs: [
-      {
-        internalType: 'address',
-        name: 'subscriber',
-        type: 'address',
-      },
-    ],
-    name: 'getUserSubscriptions',
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
     inputs: [
       {
         internalType: 'bytes',
@@ -760,6 +734,30 @@ export const SubscriptionPluginAbi = [
     name: 'onUninstall',
     type: 'function',
     outputs: [],
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        type: 'address',
+        name: 'addr',
+      },
+      {
+        internalType: 'uint8',
+        name: 'functionId',
+        type: 'uint8',
+      },
+    ],
+    outputs: [
+      {
+        internalType: 'FunctionReference',
+        type: 'bytes21',
+        name: '',
+      },
+    ],
+    stateMutability: 'pure',
+    type: 'function',
+    name: 'pack',
   },
   {
     outputs: [

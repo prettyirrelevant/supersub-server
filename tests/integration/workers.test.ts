@@ -253,6 +253,7 @@ describe('indexSubscriptionPluginEvents', () => {
         status: true,
         type: true,
       },
+      orderBy: [{ createdAt: 'asc' }],
     });
     const lastQueriedBlockCache = await prisma.cache.findUnique({ where: { key: 'last-queried-block' } });
 

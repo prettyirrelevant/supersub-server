@@ -45,11 +45,11 @@ export const indexSubscriptionPluginEvents = async (chain: Chain) => {
   const events = eventPromises.map((entry) => (entry.status === 'fulfilled' ? entry.value : [])).flat();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const eventHandlers: Record<string, (event: any) => Promise<void>> = {
-    // SubscriptionPlanChanged: handleSubscriptionPlanChanged,
+    SubscriptionEndTimeUpdated: handleSubscriptionEndTimeUpdated,
     SubscriptionCharged: handleSubscriptionCharged,
     ProductCreated: handleProductCreated,
     ProductUpdated: handleProductUpdated,
-    Unsubscribed: handleUnSubscribed,
+    UnSubscribed: handleUnSubscribed,
     PlanCreated: handlePlanCreated,
     PlanUpdated: handlePlanUpdated,
     Subscribed: handleSubscribed,
@@ -167,14 +167,29 @@ const handleSubscribed = async (
 };
 
 const handleUnSubscribed = async (
-  event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'Subscribed'>,
+  event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'UnSubscribed'>,
 ) => {
   await prisma.subscription.update({
     where: {
       onchainReference: Number(event.args.subscriptionId),
+      subscriberAddress: event.args.user,
     },
     data: {
       isActive: false,
+    },
+  });
+};
+
+const handleSubscriptionEndTimeUpdated = async (
+  event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'SubscriptionEndTimeUpdated'>,
+) => {
+  await prisma.subscription.update({
+    where: {
+      subscriberAddress: event.args.subscriber,
+      onchainReference: Number(event.args.id),
+    },
+    data: {
+      subscriptionExpiry: solidityTimestampToDateTime(event.args.endTime),
     },
   });
 };
