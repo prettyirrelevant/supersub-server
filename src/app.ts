@@ -6,23 +6,20 @@ import cors from 'cors';
 
 import { requestLoggerMiddleware } from '~/middlewares/requestLogger';
 import { bullBoardMiddleware } from '~/middlewares/bullBoard';
-import { ConsoleLogger, LogLevel } from '~/pkg/logging';
 import { type SuccessResponse } from '~/pkg/responses';
 import { handleError, ApiError } from '~/pkg/errors';
 import { queue } from '~/pkg/bullmq';
-import { config } from '~/pkg/env';
 import { prisma } from '~/pkg/db';
 
 import { privyAuthenticationMiddleware } from './middlewares/auth';
 import { generateApiKeyPair } from './utils';
 
 export const application: Application = express();
-export const logger = new ConsoleLogger({ level: config.LOG_LEVEL as LogLevel });
 
 application.use(cors());
 application.use(helmet());
 application.use(express.json());
-application.use(requestLoggerMiddleware({ logger: logger.getInstance() }));
+application.use(requestLoggerMiddleware());
 application.use('/ui', bullBoardMiddleware());
 
 application.get('/', async (req: Request, res: Response<SuccessResponse>) => {

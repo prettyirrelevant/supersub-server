@@ -1,8 +1,9 @@
 import 'dotenv/config';
 
+import { logger } from '~/pkg/logging';
 import { config } from '~/pkg/env';
 
-import { application, logger } from './app';
+import { application } from './app';
 
 const server = application.listen(config.PORT, () => {
   logger.debug(`server is running on port ${config.PORT}`);
@@ -24,7 +25,7 @@ const unexpectedErrorHandler = (error: Error | any): void => {
 process.on('uncaughtException', unexpectedErrorHandler);
 process.on('unhandledRejection', unexpectedErrorHandler);
 process.on('SIGTERM', () => {
-  logger.info('sigterm received. closing server...');
+  logger.warn('sigterm received. closing server...');
   server.close();
 });
 

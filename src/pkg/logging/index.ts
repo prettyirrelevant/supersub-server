@@ -1,65 +1,27 @@
-import pino, { type redactOptions } from 'pino';
+import winston from 'winston';
 
-export type Fields = Record<string, unknown> & Partial<{ err: Error }>;
+import { config } from '~/pkg/env';
 
-export enum LogLevel {
-  Silent = 'silent',
-  Fatal = 'fatal',
-  Error = 'error',
-  Debug = 'debug',
-  Trace = 'trace',
-  Warn = 'warn',
-  Info = 'info',
-}
+winston.addColors({
+  error: 'redBright',
+  warn: 'orange',
+  info: 'green',
+  debug: 'cyan',
+});
 
-export interface Logger {
-  debug(message: string, fields?: Fields): void;
-  error(message: string, fields?: Fields): void;
-  info(message: string, fields?: Fields): void;
-  warn(message: string, fields?: Fields): void;
-}
-
-export class ConsoleLogger {
-  private readonly logger: pino.Logger;
-
-  constructor(opts?: { redact?: redactOptions | string[]; level?: LogLevel }) {
-    const options: pino.LoggerOptions = {
-      timestamp: pino.stdTimeFunctions.isoTime,
-      level: opts?.level || 'debug',
-      redact: opts?.redact,
-    };
-    this.logger = pino(options);
-  }
-
-  private logFn(level: LogLevel, message: string, fields?: Fields): void {
-    if (fields) {
-      this.logger[level](fields, message);
-      return;
-    }
-
-    this.logger[level](message);
-    return;
-  }
-
-  public error(message: string, fields?: Fields): void {
-    this.logFn('error', message, fields);
-  }
-
-  public debug(message: string, fields?: Fields): void {
-    this.logFn('debug', message, fields);
-  }
-
-  public info(message: string, fields?: Fields): void {
-    this.logFn('info', message, fields);
-  }
-
-  public warn(message: string, fields?: Fields): void {
-    this.logFn('warn', message, fields);
-  }
-
-  public getInstance() {
-    return this.logger;
-  }
-}
-
-export const logger = new ConsoleLogger();
+export const logger = winston.createLogger({
+  format:
+    config.ENVIRONMENT === 'development'
+      ? winston.format.combine(
+          winston.format.colorize(),
+          winston.format.simple(),
+          winston.format.errors({ stack: true }),
+        )
+      : winston.format.combine(
+          winston.format.timestamp(),
+          winston.format.json(),
+          winston.format.errors({ stack: true }),
+        ),
+  transports: [new winston.transports.Console()],
+  level: config.LOG_LEVEL,
+});
