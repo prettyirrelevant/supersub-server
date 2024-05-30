@@ -4,11 +4,10 @@ import { Prisma } from '@prisma/client';
 import helmet from 'helmet';
 import cors from 'cors';
 
+import { type SuccessResponse, successResponse } from '~/pkg/responses';
 import { requestLoggerMiddleware } from '~/middlewares/requestLogger';
 import { bullBoardMiddleware } from '~/middlewares/bullBoard';
-import { type SuccessResponse } from '~/pkg/responses';
 import { handleError, ApiError } from '~/pkg/errors';
-import { queue } from '~/pkg/bullmq';
 import { prisma } from '~/pkg/db';
 
 import { privyAuthenticationMiddleware } from './middlewares/auth';
@@ -23,8 +22,7 @@ application.use(requestLoggerMiddleware());
 application.use('/ui', bullBoardMiddleware());
 
 application.get('/', async (req: Request, res: Response<SuccessResponse>) => {
-  await queue.add('new-job', { foo: 'bar' });
-  return res.status(StatusCodes.OK).json({ data: { ping: 'pong' } });
+  return successResponse(res, { ping: 'pong' }, StatusCodes.OK);
 });
 
 application.post(

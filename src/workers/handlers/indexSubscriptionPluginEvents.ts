@@ -11,64 +11,83 @@ import {
   bytes32ToText,
   CHUNK_SIZE,
 } from '~/pkg/evm';
+import { logger } from '~/pkg/logging';
 import { getRanges } from '~/utils';
 import { prisma } from '~/pkg/db';
 
 export const indexSubscriptionPluginEvents = async (chain: Chain) => {
-  const client = getEvmHttpClient(chain);
-  const lastQueriedBlockCache = await prisma.cache.upsert({
-    create: {
-      value: SUBSCRIPTION_PLUGIN_INIT_BLOCK.toString(),
-      key: 'last-queried-block',
-    },
-    where: {
-      key: 'last-queried-block',
-    },
-    update: {},
-  });
+  try {
+    logger.info('Indexing subscription plugin events');
+    const client = getEvmHttpClient(chain);
+    const lastQueriedBlockCache = await prisma.cache.upsert({
+      create: {
+        value: SUBSCRIPTION_PLUGIN_INIT_BLOCK.toString(),
+        key: 'last-queried-block',
+      },
+      where: {
+        key: 'last-queried-block',
+      },
+      update: {},
+    });
 
-  const lastQueriedBlock = BigInt(lastQueriedBlockCache.value);
-  const latestBlock = await client.getBlockNumber();
+    const lastQueriedBlock = BigInt(lastQueriedBlockCache.value);
+    const latestBlock = await client.getBlockNumber();
+    logger.info('Last queried block', { lastQueriedBlock: lastQueriedBlock.toString() });
+    logger.info('Latest block', { latestBlock: latestBlock.toString() });
 
-  const ranges: [bigint, bigint][] = getRanges(Number(lastQueriedBlock), Number(latestBlock), CHUNK_SIZE);
-  const eventPromises = await Promise.allSettled(
-    ranges.map(
-      async ([start, end]) =>
-        await client.getContractEvents({
-          address: SUBSCRIPTION_PLUGIN_ADDRESS,
-          abi: SubscriptionPluginAbi,
-          fromBlock: start,
-          toBlock: end,
-        }),
-    ),
-  );
-  const events = eventPromises.map((entry) => (entry.status === 'fulfilled' ? entry.value : [])).flat();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const eventHandlers: Record<string, (event: any) => Promise<void>> = {
-    SubscriptionEndTimeUpdated: handleSubscriptionEndTimeUpdated,
-    SubscriptionCharged: handleSubscriptionCharged,
-    ProductCreated: handleProductCreated,
-    ProductUpdated: handleProductUpdated,
-    UnSubscribed: handleUnSubscribed,
-    PlanCreated: handlePlanCreated,
-    PlanUpdated: handlePlanUpdated,
-    Subscribed: handleSubscribed,
-  };
-  for (const event of events) {
-    const handler = eventHandlers[event.eventName];
-    if (handler) {
-      await handler(event);
+    const ranges: [bigint, bigint][] = getRanges(Number(lastQueriedBlock), Number(latestBlock), CHUNK_SIZE);
+    logger.info('Processing event ranges', { numRanges: ranges.length });
+
+    const eventPromises = await Promise.allSettled(
+      ranges.map(
+        async ([start, end]) =>
+          await client.getContractEvents({
+            address: SUBSCRIPTION_PLUGIN_ADDRESS,
+            abi: SubscriptionPluginAbi,
+            fromBlock: start,
+            toBlock: end,
+          }),
+      ),
+    );
+    const events = eventPromises.map((entry) => (entry.status === 'fulfilled' ? entry.value : [])).flat();
+    logger.info('Total events', { numEvents: events.length });
+
+    const eventHandlers: Record<string, (event: any) => Promise<void>> = {
+      SubscriptionEndTimeUpdated: handleSubscriptionEndTimeUpdated,
+      SubscriptionCharged: handleSubscriptionCharged,
+      ProductCreated: handleProductCreated,
+      ProductUpdated: handleProductUpdated,
+      UnSubscribed: handleUnSubscribed,
+      PlanCreated: handlePlanCreated,
+      PlanUpdated: handlePlanUpdated,
+      Subscribed: handleSubscribed,
+    };
+
+    for (const event of events) {
+      const handler = eventHandlers[event.eventName];
+      if (handler) {
+        try {
+          logger.info(`Handling event: ${event.eventName}`);
+          await handler(event);
+        } catch (error) {
+          logger.error(`Error handling event ${event.eventName}`, { error, event });
+        }
+      } else {
+        logger.warn(`No handler found for event: ${event.eventName}`);
+      }
     }
-  }
 
-  await prisma.cache.update({
-    data: {
-      value: latestBlock.toString(),
-    },
-    where: {
-      key: 'last-queried-block',
-    },
-  });
+    await prisma.cache.update({
+      data: {
+        value: latestBlock.toString(),
+      },
+      where: {
+        key: 'last-queried-block',
+      },
+    });
+  } catch (error) {
+    logger.error(error, { description: 'Error indexing subscription plugin events' });
+  }
 };
 
 const handleProductCreated = async (

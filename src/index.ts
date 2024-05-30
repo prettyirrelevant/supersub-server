@@ -18,7 +18,7 @@ const exitHandler = (): void => {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const unexpectedErrorHandler = (error: Error | any): void => {
-  logger.error('unexpected error encountered', { err: error });
+  logger.error(error, { description: 'unexpected error encountered' });
   exitHandler();
 };
 

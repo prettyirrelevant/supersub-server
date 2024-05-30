@@ -5,6 +5,7 @@ import { Prisma } from '@prisma/client';
 import { ZodError } from 'zod';
 
 import { errorResponse } from '~/pkg/responses';
+import { logger } from '~/pkg/logging';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -24,7 +25,7 @@ export class ApiError extends Error {
 export const handleError = (err: Error, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof ApiError) {
     if (err.status >= 500) {
-      req.log.error(err, 'api error');
+      logger.error(err, { description: 'api error' });
     }
 
     return errorResponse(res, err.message, err.status);
@@ -36,7 +37,7 @@ export const handleError = (err: Error, req: Request, res: Response, _next: Next
     err instanceof Prisma.PrismaClientRustPanicError ||
     err instanceof Prisma.PrismaClientInitializationError
   ) {
-    req.log.error(err, 'database error');
+    logger.error(err, { description: 'database error' });
 
     return errorResponse(
       res,
@@ -46,13 +47,13 @@ export const handleError = (err: Error, req: Request, res: Response, _next: Next
   }
 
   if (err instanceof ZodError) {
-    req.log.error(err, 'validation error');
+    logger.error(err, { description: 'validation error' });
 
     const validationErr = fromZodError(err);
     return errorResponse(res, validationErr.message, StatusCodes.UNPROCESSABLE_ENTITY);
   }
 
-  req.log.error(err, 'unhandled exception');
+  logger.error(err, { description: 'unhandled exception error' });
   return errorResponse(
     res,
     'An unexpected error occurred. We are working to resolve the issue.',
