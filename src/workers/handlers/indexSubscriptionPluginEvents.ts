@@ -51,7 +51,7 @@ export const indexSubscriptionPluginEvents = async (chain: Chain) => {
     );
     const events = eventPromises.map((entry) => (entry.status === 'fulfilled' ? entry.value : [])).flat();
     logger.info('Total events', { numEvents: events.length });
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const eventHandlers: Record<string, (event: any) => Promise<void>> = {
       SubscriptionEndTimeUpdated: handleSubscriptionEndTimeUpdated,
       SubscriptionCharged: handleSubscriptionCharged,
