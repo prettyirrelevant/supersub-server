@@ -8,7 +8,7 @@
     "lint": "eslint . --ext .ts,.js,.mts",
     "clean": "rimraf dist coverage",
     "build": "rimraf dist && tsup",
-    "start": "node dist/index.js",
+    "start": "cross-env ENVIRONMENT=production node dist/index.js",
     "test:dev": "vitest dev",
     "test": "vitest run"
   },
@@ -49,6 +49,7 @@
     "@privy-io/server-auth": "^1.7.3",
     "bullmq": "^5.7.10",
     "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
     "dayjs": "^1.11.11",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",

@@ -1,11 +1,19 @@
 import { Worker, Queue } from 'bullmq';
-import path from 'node:path';
+import path from 'path';
 
 import { logger } from '~/pkg/logging';
 import { redis } from '~/pkg/redis';
+import { config } from '~/pkg/env';
 
 const queue = new Queue('supersub-queue', { connection: redis });
-const worker = new Worker('supersub-queue', `${path.dirname(path.dirname(__dirname))}/workers/sandboxed.ts`, {
+
+const sandboxedWorkerPath = () => {
+  return config.ENVIRONMENT === 'development'
+    ? path.join(path.dirname(path.dirname(path.dirname(__filename))), 'workers', `sandboxed.ts`)
+    : path.join(path.dirname(__filename), 'workers', 'sandboxed.js');
+};
+
+const worker = new Worker('supersub-queue', sandboxedWorkerPath(), {
   connection: redis,
 });
 
