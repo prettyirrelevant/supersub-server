@@ -38,6 +38,18 @@ exports[`indexSubscriptionPluginEvents > should index all events properly 1`] = 
     "tokenAddress": "0x0Fd9e8d3aF1aaee056EB9e802c3A762a667b1904",
     "type": "SUBSCRIPTION",
   },
+  {
+    "creatorAddress": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
+    "description": "Spotify is a digital music service that gives you access to millions of songs.",
+    "destinationChain": 11155111,
+    "isActive": true,
+    "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/168px-Spotify_logo_without_text.svg.png",
+    "name": "Spotify NGN",
+    "onchainReference": 4,
+    "receivingAddress": "0xF65330dC75e32B20Be62f503a337cD1a072f898f",
+    "tokenAddress": "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582",
+    "type": "SUBSCRIPTION",
+  },
 ]
 `;
 
@@ -70,6 +82,20 @@ exports[`indexSubscriptionPluginEvents > should index all events properly 2`] = 
     "onchainReference": 4,
     "price": "500000000000000000",
     "productOnchainReference": 3,
+  },
+  {
+    "chargeInterval": 3600,
+    "isActive": true,
+    "onchainReference": 5,
+    "price": "100000",
+    "productOnchainReference": 4,
+  },
+  {
+    "chargeInterval": 9000,
+    "isActive": true,
+    "onchainReference": 6,
+    "price": "200000",
+    "productOnchainReference": 4,
   },
 ]
 `;
@@ -105,6 +131,16 @@ exports[`indexSubscriptionPluginEvents > should index all events properly 3`] = 
     "productOnchainReference": 3,
     "subscriberAddress": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
     "subscriptionExpiry": 2024-09-05T16:49:49.000Z,
+  },
+  {
+    "creatorAddress": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
+    "isActive": true,
+    "lastChargeDate": 2024-05-30T01:21:25.000Z,
+    "onchainReference": 3,
+    "planOnchainReference": 5,
+    "productOnchainReference": 4,
+    "subscriberAddress": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
+    "subscriptionExpiry": 2500-12-01T00:00:00.000Z,
   },
 ]
 `;
@@ -175,6 +211,28 @@ exports[`indexSubscriptionPluginEvents > should index all events properly 4`] = 
     "status": "SUCCESS",
     "subscriptionOnchainReference": 2,
     "tokenAddress": "0x0Fd9e8d3aF1aaee056EB9e802c3A762a667b1904",
+    "type": "DEPOSIT",
+  },
+  {
+    "amount": "100000",
+    "narration": "Subscription fee charged",
+    "onchainReference": "0x878c146f23d5f7a198e1161a94d3d18138a4c202888c0c9f64c8fb40662fb10d",
+    "recipient": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
+    "sender": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
+    "status": "SUCCESS",
+    "subscriptionOnchainReference": 3,
+    "tokenAddress": "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582",
+    "type": "WITHDRAWAL",
+  },
+  {
+    "amount": "100000",
+    "narration": "Subscription fee received",
+    "onchainReference": "0x878c146f23d5f7a198e1161a94d3d18138a4c202888c0c9f64c8fb40662fb10d",
+    "recipient": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
+    "sender": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
+    "status": "SUCCESS",
+    "subscriptionOnchainReference": 3,
+    "tokenAddress": "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582",
     "type": "DEPOSIT",
   },
 ]

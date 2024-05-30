@@ -32,12 +32,28 @@ describe('enrichERC20Tokens', () => {
 
     await enrichERC20Tokens(polygonAmoy);
 
-    const tokensAfter = await prisma.token.findMany({ select: { decimals: true, address: true } });
+    const tokensAfter = await prisma.token.findMany({ select: { decimals: true, address: true, symbol: true } });
     expect(tokensAfter).toHaveLength(4);
-    expect(tokensAfter).toContainEqual({ address: '0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582', decimals: 6 });
-    expect(tokensAfter).toContainEqual({ address: '0x360ad4f9a9A8EFe9A8DCB5f461c4Cc1047E1Dcf9', decimals: 18 });
-    expect(tokensAfter).toContainEqual({ address: '0x0Fd9e8d3aF1aaee056EB9e802c3A762a667b1904', decimals: 18 });
-    expect(tokensAfter).toContainEqual({ address: '0xcab0EF91Bee323d1A617c0a027eE753aFd6997E4', decimals: 18 });
+    expect(tokensAfter).toContainEqual({
+      address: '0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582',
+      symbol: 'USDC',
+      decimals: 6,
+    });
+    expect(tokensAfter).toContainEqual({
+      address: '0x360ad4f9a9A8EFe9A8DCB5f461c4Cc1047E1Dcf9',
+      symbol: 'WMATIC',
+      decimals: 18,
+    });
+    expect(tokensAfter).toContainEqual({
+      address: '0x0Fd9e8d3aF1aaee056EB9e802c3A762a667b1904',
+      symbol: 'LINK',
+      decimals: 18,
+    });
+    expect(tokensAfter).toContainEqual({
+      address: '0xcab0EF91Bee323d1A617c0a027eE753aFd6997E4',
+      symbol: 'CCIP-BnM',
+      decimals: 18,
+    });
   });
 });
 
@@ -257,16 +273,16 @@ describe('indexSubscriptionPluginEvents', () => {
     });
     const lastQueriedBlockCache = await prisma.cache.findUnique({ where: { key: 'last-queried-block' } });
 
-    expect(products.length).toStrictEqual(3);
+    expect(products.length).toStrictEqual(4);
     expect(products).toMatchSnapshot();
 
-    expect(plans.length).toStrictEqual(4);
+    expect(plans.length).toStrictEqual(6);
     expect(plans).toMatchSnapshot();
 
-    expect(subscriptions.length).toStrictEqual(3);
+    expect(subscriptions.length).toStrictEqual(4);
     expect(subscriptions).toMatchSnapshot();
 
-    expect(transactions.length).toStrictEqual(6);
+    expect(transactions.length).toStrictEqual(8);
     expect(transactions).toMatchSnapshot();
 
     assert.closeTo(Number(lastQueriedBlockCache?.value as string), Number(latestBlock), 3); // a difference of 3 mined blocks.

@@ -11,19 +11,24 @@ export const enrichERC20Tokens = async (chain: Chain) => {
   const calls = tokens.map((token) => {
     const contract = { address: token.address as `0x${string}`, abi: erc20Abi } as const;
 
-    return { ...contract, functionName: 'decimals' };
+    return [
+      { ...contract, functionName: 'decimals' },
+      { ...contract, functionName: 'symbol' },
+    ];
   });
-  const results = await client.multicall({ contracts: calls });
+  const results = await client.multicall({ contracts: calls.flat() });
 
   const dbActions = [];
-  for (let i = 0; i < results.length; i++) {
-    if (results[i].status !== 'success') {
+  for (let i = 0; i < results.length; i += 2) {
+    const [decimalsResult, symbolResult] = results.slice(i, i + 2);
+    if (decimalsResult.status !== 'success' || symbolResult.status !== 'success') {
       continue;
     }
+
     dbActions.push(
       prisma.token.update({
-        data: { decimals: Number(results[i].result) },
-        where: { address: tokens[i].address },
+        data: { decimals: Number(decimalsResult.result), symbol: symbolResult.result as string },
+        where: { address: tokens[i / 2].address },
       }),
     );
   }
