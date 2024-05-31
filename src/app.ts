@@ -1,6 +1,6 @@
 import express, { type NextFunction, type Application, type Response, type Request } from 'express';
+import { TransactionType, Prisma } from '@prisma/client';
 import { StatusCodes } from 'http-status-codes';
-import { Prisma } from '@prisma/client';
 import helmet from 'helmet';
 import cors from 'cors';
 
@@ -77,27 +77,38 @@ application.get(
   privyAuthenticationMiddleware,
   async (req: Request, res: Response<SuccessResponse>) => {
     const address = req.auth.address;
-    const { offset = '1', limit = '10', reference, product } = req.query;
+    const { offset = '0', limit = '10', reference, product } = req.query;
 
     const where: Prisma.TransactionWhereInput = {
-      AND: [{ OR: [{ sender: address }, { recipient: address }] }],
+      OR: [
+        {
+          AND: [{ sender: address }, { type: TransactionType.WITHDRAWAL }],
+        },
+        {
+          AND: [{ recipient: address }, { type: TransactionType.DEPOSIT }],
+        },
+      ],
     };
 
     if (reference) {
-      where.AND.push({ subscriptionOnchainReference: parseInt(reference as string) });
+      where.subscriptionOnchainReference = parseInt(reference as string);
     }
     if (product) {
-      where.AND.push({ subscription: { product: { name: product } } });
+      where.subscription = {
+        product: {
+          name: product as string,
+        },
+      };
     }
 
-    const skip = (parseInt(offset as string, 10) - 1) * parseInt(limit as string, 10);
-    const take = parseInt(limit as string, 10);
+    const skip = parseInt(offset as string);
+    const take = parseInt(limit as string);
     const transactions = await prisma.transaction.findMany({
       where: where,
       take: take,
       skip: skip,
     });
-    return res.status(StatusCodes.OK).json({ data: { transactions: transactions } });
+    return res.status(StatusCodes.OK).json({ data: { transactions } });
   },
 );
 
@@ -111,12 +122,16 @@ application.get(
     const where: Prisma.SubscriptionWhereInput = {
       subscriberAddress: address,
     };
-    if (isActive === 'true') {
-      where.isActive = true;
+    if (isActive) {
+      where.isActive = ['true', '1'].includes(isActive.toString().toLowerCase())
+        ? true
+        : ['false', '0'].includes(isActive.toString().toLowerCase())
+          ? false
+          : undefined;
     }
 
     const subscriptions = await prisma.subscription.findMany({
-      include: { transactions: true, product: true },
+      include: { product: true, plan: true },
       where: where,
     });
 
@@ -129,7 +144,10 @@ application.get(
   privyAuthenticationMiddleware,
   async (req: Request, res: Response<SuccessResponse>) => {
     const address = req.auth.address;
-    const products = await prisma.product.findMany({ where: { creatorAddress: address }, include: { plans: true } });
+    const products = await prisma.product.findMany({
+      include: { creator: true, plans: true },
+      where: { creatorAddress: address },
+    });
     return res.status(StatusCodes.OK).json({ data: { products: products } });
   },
 );

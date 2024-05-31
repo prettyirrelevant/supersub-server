@@ -51,6 +51,11 @@ describe('Transactions', async () => {
     const accounts = await createFakeAccounts(2);
     await createFakeTokens();
     const transactions = await createFakeTransactions(5, accounts);
+    const transactionsForAccount0 = transactions.filter(
+      (tx) =>
+        (tx.sender === accounts[0].smartAccountAddress && tx.type === 'WITHDRAWAL') ||
+        (tx.recipient === accounts[0].smartAccountAddress && tx.type === 'DEPOSIT'),
+    );
 
     const accessToken = await createPrivyAccessToken({ privyDid: accounts[0].metadata?.privyDid, privateKey });
     const response = await request(application)
@@ -61,23 +66,28 @@ describe('Transactions', async () => {
 
     expect(response.body).toHaveProperty('data');
     expect(response.body.data).toHaveProperty('transactions');
-    expect(response.body.data.transactions).toHaveLength(transactions.length);
+    expect(response.body.data.transactions).toHaveLength(transactionsForAccount0.length);
   });
 
   it('GET /transactions should return transactions with offset and limit', async () => {
     const accounts = await createFakeAccounts(2);
     await createFakeTokens();
-    await createFakeTransactions(20, accounts);
+    const transactions = await createFakeTransactions(20, accounts);
+    const transactionsForAccount0 = transactions.filter(
+      (tx) =>
+        (tx.sender === accounts[0].smartAccountAddress && tx.type === 'WITHDRAWAL') ||
+        (tx.recipient === accounts[0].smartAccountAddress && tx.type === 'DEPOSIT'),
+    );
 
     const accessToken = await createPrivyAccessToken({ privyDid: accounts[0].metadata?.privyDid, privateKey });
     const response = await request(application)
-      .get('/api/transactions?offset=1&limit=10')
+      .get('/api/transactions?offset=0&limit=15')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect('Content-Type', /json/)
       .expect(200);
 
     expect(response.body.data).toHaveProperty('transactions');
-    expect(response.body.data.transactions).toHaveLength(10);
+    expect(response.body.data.transactions).toHaveLength(transactionsForAccount0.length);
   });
 
   it('GET /transactions should filter transactions by reference', async () => {

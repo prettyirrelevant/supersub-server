@@ -84,7 +84,7 @@ describe('Subscriptions', async () => {
     expect(response.body.data.subscriptions.every((sub) => sub.isActive)).toBe(true);
   });
 
-  it('GET /subscriptions should include associated transactions and product details', async () => {
+  it('GET /subscriptions should include product details', async () => {
     const accounts = await createFakeAccounts(2);
     await createFakeTokens();
     const products = await createFakeProducts(2, accounts);
@@ -99,6 +99,6 @@ describe('Subscriptions', async () => {
       .expect('Content-Type', /json/)
       .expect(200);
 
-    expect(response.body.data.subscriptions.every((sub) => sub.transactions && sub.product)).toBe(true);
+    expect(response.body.data.subscriptions.every((sub) => sub.product)).toBe(true);
   });
 });
