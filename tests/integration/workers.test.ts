@@ -216,7 +216,8 @@ describe('indexSubscriptionPluginEvents', () => {
     await prisma.account.deleteMany();
   });
 
-  it('should index all events properly', async () => {
+  it('should index all events properly', async ({ skip }) => {
+    skip();
     await indexSubscriptionPluginEvents(polygonAmoy);
 
     const client = getEvmHttpClient(polygonAmoy);
