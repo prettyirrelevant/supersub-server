@@ -15,9 +15,14 @@ import { logger } from '~/pkg/logging';
 import { getRanges } from '~/utils';
 import { prisma } from '~/pkg/db';
 
+import { fetchSmartAccounts } from './fetchSmartAccounts';
+
 export const indexSubscriptionPluginEvents = async (chain: Chain) => {
   try {
     logger.info('Indexing subscription plugin events');
+
+    await fetchSmartAccounts(chain);
+
     const client = getEvmHttpClient(chain);
     const lastQueriedBlockCache = await prisma.cache.upsert({
       create: {
