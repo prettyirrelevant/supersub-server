@@ -1,13 +1,14 @@
 import { type User } from '@privy-io/server-auth';
 import { type Chain } from 'viem/chains';
+import { Network } from 'alchemy-sdk';
 
-import { getMultiOwnerModularAccountAddresses } from '~/pkg/evm';
+import { getMultiOwnerModularAccountAddresses, addAddressesToWebhook } from '~/pkg/evm';
 import { getUniqueElements } from '~/utils';
 import { logger } from '~/pkg/logging';
 import { privy } from '~/pkg/privy';
 import { prisma } from '~/pkg/db';
 
-export const fetchSmartAccounts = async (chain: Chain) => {
+export const fetchSmartAccounts = async (chain: Chain, alchemyNetwork: Network) => {
   try {
     logger.info('Fetching Privy users');
     const privyUsers = await privy.getUsers();
@@ -41,6 +42,7 @@ export const fetchSmartAccounts = async (chain: Chain) => {
       );
 
       logger.info('Creating new accounts in the database');
+      await addAddressesToWebhook(Object.values(modularAccountAddressesForNewWallets), alchemyNetwork);
       await prisma.account.createMany({
         data: Object.entries(modularAccountAddressesForNewWallets).map(([walletAddress, modularAccountAddress]) => ({
           emailAddress: usersByWalletAddress[walletAddress as `0x${string}`].email?.address as string,

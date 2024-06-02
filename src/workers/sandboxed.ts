@@ -1,10 +1,12 @@
 import { polygonAmoy } from 'viem/chains';
+import { Network } from 'alchemy-sdk';
 import { Job } from 'bullmq';
 
 import { logger } from '~/pkg/logging';
 
 import { indexSubscriptionPluginEvents } from './handlers/indexSubscriptionPluginEvents';
 import { notifyUsersForUpcomingSubscriptionRenewal } from './handlers/emailNotification';
+import { handleAlchemyAddressActivityWebhook } from './handlers/addressActivityWebhook';
 import { fetchSmartAccounts } from './handlers/fetchSmartAccounts';
 import { renewSubscriptions } from './handlers/renewSubscriptions';
 import { enrichERC20Tokens } from './handlers/enrichTokens';
@@ -13,7 +15,7 @@ export default async function (job: Job) {
   logger.info(`Starting job...`, { jobName: job.name, jobData: job.data });
 
   if (job.name === 'fetch-smart-accounts') {
-    await fetchSmartAccounts(polygonAmoy);
+    await fetchSmartAccounts(polygonAmoy, Network.MATIC_AMOY);
   } else if (job.name === 'enrich-tokens') {
     await enrichERC20Tokens(polygonAmoy);
   } else if (job.name === 'index-subscription-plugin-events') {
@@ -22,6 +24,8 @@ export default async function (job: Job) {
     await notifyUsersForUpcomingSubscriptionRenewal();
   } else if (job.name === 'renew-subscriptions') {
     await renewSubscriptions(polygonAmoy);
+  } else if (job.name === 'alchemy-address-activity') {
+    await handleAlchemyAddressActivityWebhook(job.data.webhook);
   } else {
     logger.warn(`Unrecognized job name. Skipping...`, { jobName: job.name });
   }

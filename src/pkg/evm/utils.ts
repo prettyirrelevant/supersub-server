@@ -8,10 +8,11 @@ import { getChain } from '@alchemy/aa-core';
 import { type Chain } from 'viem/chains';
 import dayjs from 'dayjs';
 
+import { ALCHEMY_WEBHOOK_ID } from '~/pkg/evm';
 import { config } from '~/pkg/env';
 
 export const getAlchemyClient = (network: Network) => {
-  return new Alchemy({ apiKey: config.ALCHEMY_API_KEY, network });
+  return new Alchemy({ authToken: config.ALCHEMY_WEBHOOK_SIGNING_KEY, apiKey: config.ALCHEMY_API_KEY, network });
 };
 
 export const getEvmHttpClient = (chain: Chain) => {
@@ -49,3 +50,11 @@ export const solidityTimestampToDateTime = (ts: bigint): Date => {
 };
 
 export const bytes32ToText = (hex: `0x${string}`): string => fromHex(hex, { to: 'string', size: 32 });
+
+export const addAddressesToWebhook = async (addresses: `0x${string}`[], network: Network) => {
+  if (config.ENVIRONMENT === 'development') return;
+
+  const client = getAlchemyClient(network);
+
+  await client.notify.updateWebhook(ALCHEMY_WEBHOOK_ID, { addAddresses: addresses });
+};

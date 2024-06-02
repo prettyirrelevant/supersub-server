@@ -1,4 +1,5 @@
 import { type Chain } from 'viem/chains';
+import { Network } from 'alchemy-sdk';
 import { type Log } from 'viem';
 import dayjs from 'dayjs';
 
@@ -17,11 +18,11 @@ import { prisma } from '~/pkg/db';
 
 import { fetchSmartAccounts } from './fetchSmartAccounts';
 
-export const indexSubscriptionPluginEvents = async (chain: Chain) => {
+export const indexSubscriptionPluginEvents = async (chain: Chain, alchemyNetwork: Network) => {
   try {
     logger.info('Indexing subscription plugin events');
 
-    await fetchSmartAccounts(chain);
+    await fetchSmartAccounts(chain, alchemyNetwork);
 
     const client = getEvmHttpClient(chain);
     const lastQueriedBlockCache = await prisma.cache.upsert({

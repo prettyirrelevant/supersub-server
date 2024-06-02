@@ -3,6 +3,7 @@ import { PrivyClient } from '@privy-io/server-auth';
 import request from 'supertest';
 import * as jose from 'jose';
 
+import { generateApiKeyPair } from '~/utils';
 import { application } from '~/app';
 import { prisma } from '~/pkg/db';
 
@@ -36,6 +37,7 @@ describe('Products', async () => {
     vi.clearAllMocks();
     await prisma.product.deleteMany();
     await prisma.token.deleteMany();
+    await prisma.apiKey.deleteMany();
     await prisma.account.deleteMany();
   });
 
@@ -54,6 +56,40 @@ describe('Products', async () => {
 
     expect(response.body).toHaveProperty('data');
     expect(response.body.data).toHaveProperty('products');
+  });
+
+  it('GET /products should work using api keys', async () => {
+    const accounts = await createFakeAccounts(2);
+    await createFakeTokens();
+    await createFakeProducts(5, accounts);
+
+    const { secretKey, publicKey } = generateApiKeyPair();
+    await prisma.apiKey.create({
+      data: {
+        account: {
+          connect: { smartAccountAddress: accounts[0].smartAccountAddress },
+        },
+        publicKey: publicKey,
+        secretKey: secretKey,
+      },
+    });
+
+    const response = await request(application)
+      .get('/api/products')
+      .set('X-Api-Key', publicKey)
+      .expect('Content-Type', /json/)
+      .expect(200);
+
+    expect(response.body).toHaveProperty('data');
+    expect(response.body.data).toHaveProperty('products');
+  });
+
+  it('GET /products should fail if no means of auth is provided', async () => {
+    const response = await request(application).get('/api/products').expect('Content-Type', /json/).expect(401);
+
+    expect(response.body).toHaveProperty('error');
+    expect(response.body.error).toHaveProperty('code');
+    expect(response.body.error).toHaveProperty('message');
   });
 
   it('GET /products should include associated plans for each product', async () => {

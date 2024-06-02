@@ -1,28 +1,29 @@
 import { NextFunction, Response, Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { polygonAmoy } from 'viem/chains';
+import { Network } from 'alchemy-sdk';
 
-import { getMultiOwnerModularAccountAddresses } from '~/pkg/evm';
-import { errorResponse } from '~/pkg/responses';
+import { getMultiOwnerModularAccountAddresses, addAddressesToWebhook } from '~/pkg/evm';
+import { ApiError } from '~/pkg/errors';
 import { privy } from '~/pkg/privy';
 import { prisma } from '~/pkg/db';
 
 export const privyAuthenticationMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   const authorizationHeader = req.header('authorization');
   if (!authorizationHeader) {
-    return errorResponse(res, 'Authorization header is missing', StatusCodes.UNAUTHORIZED);
+    return next(new ApiError(StatusCodes.UNAUTHORIZED, { message: 'Authorization header is missing' }));
   }
 
   const [type, accessToken] = authorizationHeader.split(' ');
   if (type !== 'Bearer') {
-    return errorResponse(res, 'Invalid authorization header provided', StatusCodes.BAD_REQUEST);
+    return next(new ApiError(StatusCodes.BAD_REQUEST, { message: 'Invalid authorization header provided' }));
   }
 
   let verifiedClaims;
   try {
     verifiedClaims = await privy.verifyAuthToken(accessToken);
   } catch (e) {
-    return errorResponse(res, 'Invalid authorization header provided', StatusCodes.BAD_REQUEST);
+    return next(new ApiError(StatusCodes.BAD_REQUEST, { message: 'Invalid authorization header provided' }));
   }
 
   try {
@@ -38,6 +39,7 @@ export const privyAuthenticationMiddleware = async (req: Request, res: Response,
       const privyAddress = privyUser.wallet?.address as `0x${string}`;
       const smartAccountAddresses = await getMultiOwnerModularAccountAddresses(polygonAmoy, [privyAddress]);
 
+      await addAddressesToWebhook(Object.values(smartAccountAddresses), Network.MATIC_AMOY);
       account = await prisma.account.create({
         data: {
           smartAccountAddress: smartAccountAddresses[privyAddress],
@@ -56,6 +58,6 @@ export const privyAuthenticationMiddleware = async (req: Request, res: Response,
 
     next();
   } catch (e) {
-    return errorResponse(res, 'Invalid authorization header provided', StatusCodes.BAD_REQUEST);
+    return next(new ApiError(StatusCodes.BAD_REQUEST, { message: 'Invalid authorization header provided' }));
   }
 };

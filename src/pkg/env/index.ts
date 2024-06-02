@@ -3,6 +3,7 @@ import { z } from 'zod';
 const zEnv = z.object({
   ENVIRONMENT: z.enum(['development', 'production']).default('development'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('debug'),
+  ALCHEMY_WEBHOOK_SIGNING_KEY: z.string().min(1),
   DATABASE_URL: z.string().url().min(1),
   PORT: z.coerce.number().default(3456),
   PRIVY_APP_SECRET: z.string().min(1),

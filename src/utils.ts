@@ -1,4 +1,5 @@
 import { randomBytes } from 'crypto';
+
 export const getUniqueElements = <T>(arr1: T[], arr2: T[]): T[] => {
   const set = new Set(arr2);
   return arr1.filter((item) => !set.has(item));
@@ -25,4 +26,40 @@ export function generateApiKeyPair(): Record<string, string> {
     publicKey: `pk_${randomBytes(16).toString('hex')}`,
     secretKey: `sk_${randomBytes(16).toString('hex')}`,
   };
+}
+
+export interface AlchemyWebhookEventActivity {
+  log?: {
+    transactionIndex: string;
+    transactionHash: string;
+    blockNumber: string;
+    blockHash: string;
+    topics: string[];
+    logIndex: string;
+    removed: boolean;
+    address: string;
+    data: string;
+  };
+  rawContract: {
+    rawValue: string;
+    address?: string;
+    decimals: number;
+  };
+  fromAddress: string;
+  toAddress: string;
+  blockNum: string;
+  category: string;
+  value: number;
+  asset: string;
+  hash: string;
+}
+export interface AlchemyWebhookEvent {
+  event: {
+    activity: AlchemyWebhookEventActivity[];
+    network: string;
+  };
+  webhookId: string;
+  createdAt: string;
+  type: string;
+  id: string;
 }

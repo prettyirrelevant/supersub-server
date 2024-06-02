@@ -6,15 +6,17 @@ import { formatEther } from 'viem';
 import helmet from 'helmet';
 import cors from 'cors';
 
+import { combinedAuthenticationMiddleware, privyAuthenticationMiddleware } from '~/middlewares/auth';
 import { type SuccessResponse, successResponse } from '~/pkg/responses';
+import { alchemyWebhookMiddleware } from '~/middlewares/alchemyWebhook';
 import { requestLoggerMiddleware } from '~/middlewares/requestLogger';
+import { AlchemyWebhookEvent, generateApiKeyPair } from '~/utils';
 import { bullBoardMiddleware } from '~/middlewares/bullBoard';
 import { handleError, ApiError } from '~/pkg/errors';
 import { getAlchemyClient } from '~/pkg/evm';
 import { prisma } from '~/pkg/db';
 
-import { privyAuthenticationMiddleware } from './middlewares/auth';
-import { generateApiKeyPair } from './utils';
+import { queue } from './pkg/bullmq';
 
 export const application: Application = express();
 
@@ -180,7 +182,7 @@ application.get(
 
 application.get(
   '/api/products',
-  privyAuthenticationMiddleware,
+  combinedAuthenticationMiddleware,
   async (req: Request, res: Response<SuccessResponse>) => {
     const address = req.auth.address;
     const products = await prisma.product.findMany({
@@ -191,6 +193,13 @@ application.get(
     return successResponse(res, { products }, StatusCodes.OK);
   },
 );
+
+application.post('/_webhook', alchemyWebhookMiddleware, async (req: Request, res: Response<SuccessResponse>) => {
+  const webhookEvent = req.body as AlchemyWebhookEvent;
+  await queue.add('alchemy-address-activity', { webhook: webhookEvent });
+
+  return successResponse(res, {}, StatusCodes.OK);
+});
 
 application.use((_req: Request, _res: Response, next: NextFunction) => {
   next(

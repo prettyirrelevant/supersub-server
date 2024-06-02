@@ -55,6 +55,7 @@ jobs:
 
       - name: 'Test the codebase'
         env:
+          ALCHEMY_WEBHOOK_SIGNING_KEY: 'alchemy-signing-key'
           PRIVY_APP_SECRET: 'privy-app-secret'
           REDIS_URL: 'redis://localhost:6379'
           SECRET_KEY: 'deeznut!in!your!face'

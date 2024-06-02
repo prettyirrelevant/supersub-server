@@ -1,5 +1,5 @@
+import { zeroAddress, erc20Abi } from 'viem';
 import { type Chain } from 'viem/chains';
-import { erc20Abi } from 'viem';
 
 import { getEvmHttpClient } from '~/pkg/evm';
 import { logger } from '~/pkg/logging';
@@ -15,10 +15,19 @@ export const enrichERC20Tokens = async (chain: Chain) => {
       return;
     }
 
+    // todo: if we eventually do multi-chain support, this will need to change.
+    try {
+      await prisma.token.update({ data: { symbol: 'MATIC', decimals: 18 }, where: { address: zeroAddress } });
+    } catch (e) {
+      // do nothing
+    }
+
     logger.info('Preparing multicall requests', { numTokens: tokens.length });
     const client = getEvmHttpClient(chain);
     const calls = tokens.map((token) => {
       const contract = { address: token.address as `0x${string}`, abi: erc20Abi } as const;
+      if (token.address === zeroAddress) return [];
+
       return [
         { ...contract, functionName: 'decimals' },
         { ...contract, functionName: 'symbol' },

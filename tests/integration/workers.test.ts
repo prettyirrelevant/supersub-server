@@ -3,8 +3,10 @@ import { PrismaClient, Prisma } from '@prisma/client';
 import { PrivyClient } from '@privy-io/server-auth';
 import { polygonAmoy } from 'viem/chains';
 import { faker } from '@faker-js/faker';
+import { Network } from 'alchemy-sdk';
 
 import { indexSubscriptionPluginEvents } from '~/workers/handlers/indexSubscriptionPluginEvents';
+import { handleAlchemyAddressActivityWebhook } from '~/workers/handlers/addressActivityWebhook';
 import { fetchSmartAccounts } from '~/workers/handlers/fetchSmartAccounts';
 import { enrichERC20Tokens } from '~/workers/handlers/enrichTokens';
 import { getEvmHttpClient } from '~/pkg/evm';
@@ -102,7 +104,7 @@ describe('fetchSmartAccounts', () => {
   });
 
   it('should create new accounts for new wallets', async () => {
-    await fetchSmartAccounts(polygonAmoy);
+    await fetchSmartAccounts(polygonAmoy, Network.MATIC_AMOY);
 
     const createdAccounts = await prisma.account.findMany({
       select: {
@@ -131,7 +133,7 @@ describe('fetchSmartAccounts', () => {
       },
     });
 
-    await fetchSmartAccounts(polygonAmoy);
+    await fetchSmartAccounts(polygonAmoy, Network.MATIC_AMOY);
 
     const createdAccounts = await prisma.account.findMany({
       select: {
@@ -287,5 +289,387 @@ describe('indexSubscriptionPluginEvents', () => {
     expect(transactions).toMatchSnapshot();
 
     assert.closeTo(Number(lastQueriedBlockCache?.value as string), Number(latestBlock), 3); // a difference of 3 mined blocks.
+  });
+});
+
+describe('addressActivityWebhook', () => {
+  const webhooks = [
+    {
+      event: {
+        activity: [
+          {
+            hash: '0x204f7b0d1472a476b3ee5ae0b2aa94858e9585f893e759a47e3e30859b200c65',
+            rawContract: { rawValue: '0x38d7ea4c68000', decimals: 18 },
+            fromAddress: '0x454082dcfa29f386ef348e13d636748a91567749',
+            toAddress: '0x0046000000000151008789797b54fdb500e2a61e',
+            typeTraceAddress: 'DELEGATECALL_0',
+            blockNum: '0x76cbef',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0.001,
+          },
+        ],
+        network: 'MATIC_AMOY',
+      },
+      createdAt: '2024-06-02T15:40:57.188Z',
+      webhookId: 'wh_aehf1f0i7izifbim',
+      id: 'whevt_mznrqzf3ehmafixy',
+      type: 'ADDRESS_ACTIVITY',
+    },
+    {
+      event: {
+        activity: [
+          {
+            hash: '0x204f7b0d1472a476b3ee5ae0b2aa94858e9585f893e759a47e3e30859b200c65',
+            rawContract: { rawValue: '0x38d7ea4c68000', decimals: 18 },
+            fromAddress: '0xdadc3e4fa2cf41bc4ea0ad0e627935a5c2db433d',
+            toAddress: '0x454082dcfa29f386ef348e13d636748a91567749',
+            blockNum: '0x76cbef',
+            category: 'external',
+            asset: 'MATIC',
+            value: 0.001,
+          },
+        ],
+        network: 'MATIC_AMOY',
+      },
+      createdAt: '2024-06-02T15:40:57.214Z',
+      webhookId: 'wh_aehf1f0i7izifbim',
+      id: 'whevt_htqfu3b8dvgiuh3p',
+      type: 'ADDRESS_ACTIVITY',
+    },
+    {
+      event: {
+        activity: [
+          {
+            log: {
+              topics: [
+                '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+                '0x00000000000000000000000013ef7f422829c7139ceb4695762ba87e86437e5c',
+                '0x000000000000000000000000454082dcfa29f386ef348e13d636748a91567749',
+              ],
+              transactionHash: '0x7d58cb7bfd22ba1bc7441929c8dcec90d8aa8cbc6af80f24010a55f140006f9d',
+              blockHash: '0x3bb25e9014bf5908e6e5d7552ff3ab8ef24f724dffd5c0bb6e902cf847f083bb',
+              data: '0x0000000000000000000000000000000000000000000000000de0b6b3a7640000',
+              address: '0x0fd9e8d3af1aaee056eb9e802c3a762a667b1904',
+              blockNumber: '0x76ce0e',
+              transactionIndex: '0xa',
+              logIndex: '0x17',
+              removed: false,
+            },
+            rawContract: {
+              rawValue: '0x0000000000000000000000000000000000000000000000000de0b6b3a7640000',
+              address: '0x0fd9e8d3af1aaee056eb9e802c3a762a667b1904',
+              decimals: 18,
+            },
+            hash: '0x7d58cb7bfd22ba1bc7441929c8dcec90d8aa8cbc6af80f24010a55f140006f9d',
+            fromAddress: '0x13ef7f422829c7139ceb4695762ba87e86437e5c',
+            toAddress: '0x454082dcfa29f386ef348e13d636748a91567749',
+            blockNum: '0x76ce0e',
+            category: 'token',
+            asset: 'LINK',
+            value: 1,
+          },
+        ],
+        network: 'MATIC_AMOY',
+      },
+      createdAt: '2024-06-02T16:00:11.422Z',
+      webhookId: 'wh_aehf1f0i7izifbim',
+      id: 'whevt_0mkpjwpvvbcvsqd5',
+      type: 'ADDRESS_ACTIVITY',
+    },
+    {
+      event: {
+        activity: [
+          {
+            hash: '0xb4b2ad8939bc015e39929810d1105bbff0716609e8fe246f7cfaf89f3397ed1a',
+            fromAddress: '0x454082dcfa29f386ef348e13d636748a91567749',
+            toAddress: '0x0046000000000151008789797b54fdb500e2a61e',
+            rawContract: { rawValue: '0x0', decimals: 18 },
+            typeTraceAddress: 'DELEGATECALL_2_0_0_1_0',
+            blockNum: '0x76ce66',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0,
+          },
+          {
+            hash: '0xb4b2ad8939bc015e39929810d1105bbff0716609e8fe246f7cfaf89f3397ed1a',
+            rawContract: { rawValue: '0x2386f26fc10000', decimals: 18 },
+            fromAddress: '0x454082dcfa29f386ef348e13d636748a91567749',
+            toAddress: '0x0046000000000151008789797b54fdb500e2a61e',
+            typeTraceAddress: 'DELEGATECALL_2_0_0_3_0',
+            blockNum: '0x76ce66',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0.01,
+          },
+          {
+            hash: '0xb4b2ad8939bc015e39929810d1105bbff0716609e8fe246f7cfaf89f3397ed1a',
+            fromAddress: '0x13ef7f422829c7139ceb4695762ba87e86437e5c',
+            toAddress: '0x454082dcfa29f386ef348e13d636748a91567749',
+            rawContract: { rawValue: '0x0', decimals: 18 },
+            typeTraceAddress: 'STATICCALL_2_0_0_1',
+            blockNum: '0x76ce66',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0,
+          },
+          {
+            hash: '0xb4b2ad8939bc015e39929810d1105bbff0716609e8fe246f7cfaf89f3397ed1a',
+            fromAddress: '0x454082dcfa29f386ef348e13d636748a91567749',
+            toAddress: '0x0046000000000151008789797b54fdb500e2a61e',
+            rawContract: { rawValue: '0x0', decimals: 18 },
+            typeTraceAddress: 'DELEGATECALL_2_0_0_0_0',
+            blockNum: '0x76ce66',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0,
+          },
+          {
+            hash: '0xb4b2ad8939bc015e39929810d1105bbff0716609e8fe246f7cfaf89f3397ed1a',
+            fromAddress: '0x13ef7f422829c7139ceb4695762ba87e86437e5c',
+            toAddress: '0x454082dcfa29f386ef348e13d636748a91567749',
+            rawContract: { rawValue: '0x0', decimals: 18 },
+            typeTraceAddress: 'STATICCALL_2_0_0_0',
+            blockNum: '0x76ce66',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0,
+          },
+          {
+            hash: '0xb4b2ad8939bc015e39929810d1105bbff0716609e8fe246f7cfaf89f3397ed1a',
+            fromAddress: '0x454082dcfa29f386ef348e13d636748a91567749',
+            toAddress: '0x0046000000000151008789797b54fdb500e2a61e',
+            rawContract: { rawValue: '0x0', decimals: 18 },
+            typeTraceAddress: 'DELEGATECALL_2_0_0_2_0',
+            blockNum: '0x76ce66',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0,
+          },
+          {
+            hash: '0xb4b2ad8939bc015e39929810d1105bbff0716609e8fe246f7cfaf89f3397ed1a',
+            rawContract: { rawValue: '0x2386f26fc10000', decimals: 18 },
+            fromAddress: '0x13ef7f422829c7139ceb4695762ba87e86437e5c',
+            toAddress: '0x454082dcfa29f386ef348e13d636748a91567749',
+            typeTraceAddress: 'CALL_2_0_0_3',
+            blockNum: '0x76ce66',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0.01,
+          },
+          {
+            hash: '0xb4b2ad8939bc015e39929810d1105bbff0716609e8fe246f7cfaf89f3397ed1a',
+            fromAddress: '0x13ef7f422829c7139ceb4695762ba87e86437e5c',
+            toAddress: '0x454082dcfa29f386ef348e13d636748a91567749',
+            rawContract: { rawValue: '0x0', decimals: 18 },
+            typeTraceAddress: 'STATICCALL_2_0_0_2',
+            blockNum: '0x76ce66',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0,
+          },
+        ],
+        network: 'MATIC_AMOY',
+      },
+      createdAt: '2024-06-02T16:03:19.886Z',
+      webhookId: 'wh_aehf1f0i7izifbim',
+      id: 'whevt_1yx0y1sen2hq5xhd',
+      type: 'ADDRESS_ACTIVITY',
+    },
+    {
+      event: {
+        activity: [
+          {
+            hash: '0x703f2a5f1e132a216b042d1c8ca09d4659a453848facede29abf927e1cc34ef1',
+            fromAddress: '0x13ef7f422829c7139ceb4695762ba87e86437e5c',
+            toAddress: '0x37604f45111ab488aec38dbb17f90ef1cc90cc32',
+            rawContract: { rawValue: '0x0', decimals: 18 },
+            typeTraceAddress: 'CALL_2_0_0_0',
+            blockNum: '0x76cfbd',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0,
+          },
+          {
+            hash: '0x703f2a5f1e132a216b042d1c8ca09d4659a453848facede29abf927e1cc34ef1',
+            fromAddress: '0x13ef7f422829c7139ceb4695762ba87e86437e5c',
+            toAddress: '0x0046000000000151008789797b54fdb500e2a61e',
+            rawContract: { rawValue: '0x0', decimals: 18 },
+            typeTraceAddress: 'DELEGATECALL_2_0_0_0_0_0',
+            blockNum: '0x76cfbd',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0,
+          },
+          {
+            hash: '0x703f2a5f1e132a216b042d1c8ca09d4659a453848facede29abf927e1cc34ef1',
+            fromAddress: '0x37604f45111ab488aec38dbb17f90ef1cc90cc32',
+            toAddress: '0x13ef7f422829c7139ceb4695762ba87e86437e5c',
+            rawContract: { rawValue: '0x0', decimals: 18 },
+            typeTraceAddress: 'CALL_2_0_0_0_0',
+            blockNum: '0x76cfbd',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0,
+          },
+          {
+            hash: '0x703f2a5f1e132a216b042d1c8ca09d4659a453848facede29abf927e1cc34ef1',
+            fromAddress: '0x13ef7f422829c7139ceb4695762ba87e86437e5c',
+            toAddress: '0xce0000007b008f50d762d155002600004cd6c647',
+            rawContract: { rawValue: '0x0', decimals: 18 },
+            typeTraceAddress: 'CALL_0_0_0',
+            blockNum: '0x76cfbd',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0,
+          },
+          {
+            hash: '0x703f2a5f1e132a216b042d1c8ca09d4659a453848facede29abf927e1cc34ef1',
+            fromAddress: '0x13ef7f422829c7139ceb4695762ba87e86437e5c',
+            toAddress: '0x0046000000000151008789797b54fdb500e2a61e',
+            rawContract: { rawValue: '0x0', decimals: 18 },
+            typeTraceAddress: 'DELEGATECALL_2_0_0',
+            blockNum: '0x76cfbd',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0,
+          },
+          {
+            hash: '0x703f2a5f1e132a216b042d1c8ca09d4659a453848facede29abf927e1cc34ef1',
+            fromAddress: '0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789',
+            toAddress: '0x13ef7f422829c7139ceb4695762ba87e86437e5c',
+            rawContract: { rawValue: '0x0', decimals: 18 },
+            typeTraceAddress: 'CALL_2_0',
+            blockNum: '0x76cfbd',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0,
+          },
+          {
+            hash: '0x703f2a5f1e132a216b042d1c8ca09d4659a453848facede29abf927e1cc34ef1',
+            fromAddress: '0x13ef7f422829c7139ceb4695762ba87e86437e5c',
+            toAddress: '0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582',
+            rawContract: { rawValue: '0x0', decimals: 18 },
+            typeTraceAddress: 'STATICCALL_2_0_0_0_0_0_0',
+            blockNum: '0x76cfbd',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0,
+          },
+          {
+            hash: '0x703f2a5f1e132a216b042d1c8ca09d4659a453848facede29abf927e1cc34ef1',
+            fromAddress: '0x13ef7f422829c7139ceb4695762ba87e86437e5c',
+            toAddress: '0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582',
+            rawContract: { rawValue: '0x0', decimals: 18 },
+            typeTraceAddress: 'CALL_2_0_0_0_0_0_1',
+            blockNum: '0x76cfbd',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0,
+          },
+          {
+            hash: '0x703f2a5f1e132a216b042d1c8ca09d4659a453848facede29abf927e1cc34ef1',
+            fromAddress: '0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789',
+            toAddress: '0x13ef7f422829c7139ceb4695762ba87e86437e5c',
+            rawContract: { rawValue: '0x0', decimals: 18 },
+            typeTraceAddress: 'CALL_0',
+            blockNum: '0x76cfbd',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0,
+          },
+          {
+            hash: '0x703f2a5f1e132a216b042d1c8ca09d4659a453848facede29abf927e1cc34ef1',
+            fromAddress: '0x13ef7f422829c7139ceb4695762ba87e86437e5c',
+            toAddress: '0x0046000000000151008789797b54fdb500e2a61e',
+            rawContract: { rawValue: '0x0', decimals: 18 },
+            typeTraceAddress: 'DELEGATECALL_0_0',
+            blockNum: '0x76cfbd',
+            category: 'internal',
+            asset: 'MATIC',
+            value: 0,
+          },
+        ],
+        network: 'MATIC_AMOY',
+      },
+      createdAt: '2024-06-02T16:15:27.284Z',
+      webhookId: 'wh_aehf1f0i7izifbim',
+      id: 'whevt_djf8l6ls6kxpefbp',
+      type: 'ADDRESS_ACTIVITY',
+    },
+    {
+      event: {
+        activity: [
+          {
+            log: {
+              topics: [
+                '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+                '0x00000000000000000000000013ef7f422829c7139ceb4695762ba87e86437e5c',
+                '0x00000000000000000000000037604f45111ab488aec38dbb17f90ef1cc90cc32',
+              ],
+              transactionHash: '0x703f2a5f1e132a216b042d1c8ca09d4659a453848facede29abf927e1cc34ef1',
+              blockHash: '0xf05b4d3357830a2ded7221ecbf940ca043112580bf4475560fdd155cd5d93b04',
+              data: '0x0000000000000000000000000000000000000000000000000000000000030d40',
+              address: '0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582',
+              blockNumber: '0x76cfbd',
+              transactionIndex: '0x0',
+              logIndex: '0x1',
+              removed: false,
+            },
+            rawContract: {
+              rawValue: '0x0000000000000000000000000000000000000000000000000000000000030d40',
+              address: '0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582',
+              decimals: 6,
+            },
+            hash: '0x703f2a5f1e132a216b042d1c8ca09d4659a453848facede29abf927e1cc34ef1',
+            fromAddress: '0x13ef7f422829c7139ceb4695762ba87e86437e5c',
+            toAddress: '0x37604f45111ab488aec38dbb17f90ef1cc90cc32',
+            blockNum: '0x76cfbd',
+            category: 'token',
+            asset: 'USDC',
+            value: 0.2,
+          },
+        ],
+        network: 'MATIC_AMOY',
+      },
+      createdAt: '2024-06-02T16:15:27.411Z',
+      webhookId: 'wh_aehf1f0i7izifbim',
+      id: 'whevt_9hhwl52dq00m878x',
+      type: 'ADDRESS_ACTIVITY',
+    },
+  ];
+
+  afterEach(async () => {
+    vi.clearAllMocks();
+
+    await prisma.transaction.deleteMany();
+    await prisma.subscription.deleteMany();
+    await prisma.plan.deleteMany();
+    await prisma.product.deleteMany();
+    await prisma.token.deleteMany();
+    await prisma.cache.deleteMany();
+    await prisma.account.deleteMany();
+  });
+
+  it('should process webhooks correctly and store corresponding transactions in database', async () => {
+    for (const webhook of webhooks) {
+      await handleAlchemyAddressActivityWebhook(webhook);
+    }
+
+    const transactions = await prisma.transaction.findMany({
+      select: {
+        subscriptionOnchainReference: true,
+        onchainReference: true,
+        tokenAddress: true,
+        narration: true,
+        recipient: true,
+        amount: true,
+        sender: true,
+        status: true,
+        type: true,
+      },
+    });
+    expect(transactions.length).toStrictEqual(6);
+    expect(transactions).toMatchSnapshot();
   });
 });
