@@ -194,6 +194,20 @@ application.get(
   },
 );
 
+application.get(
+  '/api/products/:reference',
+  combinedAuthenticationMiddleware,
+  async (req: Request, res: Response<SuccessResponse>) => {
+    const address = req.auth.address;
+    const product = await prisma.product.findUnique({
+      include: { _count: { select: { subscriptions: true } }, creator: true, plans: true, token: true },
+      where: { onchainReference: Number(req.params.reference), creatorAddress: address },
+    });
+
+    return successResponse(res, { product }, StatusCodes.OK);
+  },
+);
+
 application.post('/_webhook', alchemyWebhookMiddleware, async (req: Request, res: Response<SuccessResponse>) => {
   const webhookEvent = req.body as AlchemyWebhookEvent;
   await queue.add('alchemy-address-activity', { webhook: webhookEvent });
