@@ -72,7 +72,7 @@ export const indexSubscriptionPluginEvents = async (chain: Chain) => {
       const handler = eventHandlers[event.eventName];
       if (handler) {
         try {
-          logger.info(`Handling event: ${event.eventName}`);
+          logger.info(`Handling event: ${event.eventName}`, { event });
           await handler(event);
         } catch (error) {
           logger.error(`Error handling event ${event.eventName}`, { error, event });
