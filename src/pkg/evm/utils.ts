@@ -3,9 +3,16 @@ import {
   MultiOwnerModularAccountFactoryAbi,
 } from '@alchemy/aa-accounts';
 import { createPublicClient, fromHex, http } from 'viem';
+import { Alchemy, Network } from 'alchemy-sdk';
 import { getChain } from '@alchemy/aa-core';
 import { type Chain } from 'viem/chains';
 import dayjs from 'dayjs';
+
+import { config } from '~/pkg/env';
+
+export const getAlchemyClient = (network: Network) => {
+  return new Alchemy({ apiKey: config.ALCHEMY_API_KEY, network });
+};
 
 export const getEvmHttpClient = (chain: Chain) => {
   return createPublicClient({ transport: http(), chain });

@@ -2,6 +2,7 @@ export {
   getMultiOwnerModularAccountAddresses,
   solidityTimestampToDateTime,
   getEvmHttpClient,
+  getAlchemyClient,
   bytes32ToText,
   hexToString,
 } from './utils';

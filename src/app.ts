@@ -1,6 +1,8 @@
 import express, { type NextFunction, type Application, type Response, type Request } from 'express';
 import { TransactionType, Prisma } from '@prisma/client';
 import { StatusCodes } from 'http-status-codes';
+import { Network } from 'alchemy-sdk';
+import { formatEther } from 'viem';
 import helmet from 'helmet';
 import cors from 'cors';
 
@@ -8,6 +10,7 @@ import { type SuccessResponse, successResponse } from '~/pkg/responses';
 import { requestLoggerMiddleware } from '~/middlewares/requestLogger';
 import { bullBoardMiddleware } from '~/middlewares/bullBoard';
 import { handleError, ApiError } from '~/pkg/errors';
+import { getAlchemyClient } from '~/pkg/evm';
 import { prisma } from '~/pkg/db';
 
 import { privyAuthenticationMiddleware } from './middlewares/auth';
@@ -26,6 +29,28 @@ application.get('/', async (req: Request, res: Response<SuccessResponse>) => {
 });
 
 application.get(
+  '/api/balances',
+  privyAuthenticationMiddleware,
+  async (req: Request, res: Response<SuccessResponse>, next: NextFunction) => {
+    const address = req.auth.address;
+    const alchemyClient = getAlchemyClient(Network.MATIC_AMOY);
+
+    try {
+      const nativeBalance = await alchemyClient.core.getBalance(address);
+      const tokenBalances = await alchemyClient.core.getTokensForOwner(address);
+      return successResponse(
+        res,
+        { nativeBalance: formatEther(nativeBalance.toBigInt()), tokenBalances },
+        StatusCodes.OK,
+      );
+    } catch (e) {
+      next(e);
+      return;
+    }
+  },
+);
+
+application.get(
   '/api/api-keys',
   privyAuthenticationMiddleware,
   async (req: Request, res: Response<SuccessResponse>, next: NextFunction) => {
@@ -35,7 +60,7 @@ application.get(
       next(new ApiError(StatusCodes.NOT_FOUND, { message: 'apiKey does not exist for this user' }));
       return;
     }
-    return res.status(StatusCodes.OK).json({ data: { publicKey: apiKey.publicKey, secretKey: apiKey.secretKey } });
+    return successResponse(res, { publicKey: apiKey.publicKey, secretKey: apiKey.secretKey }, StatusCodes.OK);
   },
 );
 
@@ -58,7 +83,7 @@ application.post(
         secretKey: secretKey,
       },
     });
-    return res.status(StatusCodes.CREATED).json({ data: { publicKey: publicKey, secretKey: secretKey } });
+    return successResponse(res, { publicKey, secretKey }, StatusCodes.CREATED);
   },
 );
 
@@ -82,7 +107,7 @@ application.post(
       },
       where: { accountAddress: address },
     });
-    return res.status(StatusCodes.OK).json({ data: { publicKey: publicKey, secretKey: secretKey } });
+    return successResponse(res, { publicKey, secretKey }, StatusCodes.OK);
   },
 );
 
@@ -122,7 +147,7 @@ application.get(
       take: take,
       skip: skip,
     });
-    return res.status(StatusCodes.OK).json({ data: { transactions } });
+    return successResponse(res, { transactions }, StatusCodes.OK);
   },
 );
 
@@ -149,7 +174,7 @@ application.get(
       where: where,
     });
 
-    return res.status(StatusCodes.OK).json({ data: { subscriptions: subscriptions } });
+    return successResponse(res, { subscriptions }, StatusCodes.OK);
   },
 );
 
@@ -162,7 +187,8 @@ application.get(
       include: { _count: { select: { subscriptions: true } }, creator: true, plans: true, token: true },
       where: { creatorAddress: address },
     });
-    return res.status(StatusCodes.OK).json({ data: { products: products } });
+
+    return successResponse(res, { products }, StatusCodes.OK);
   },
 );
 

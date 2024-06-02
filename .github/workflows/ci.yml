@@ -59,6 +59,7 @@ jobs:
           REDIS_URL: 'redis://localhost:6379'
           SECRET_KEY: 'deeznut!in!your!face'
           RESEND_API_KEY: 'resend-api-key'
+          ALCHEMY_API_KEY: 'alchemy-api-key'
           PRIVY_APP_ID: 'privy-app-id'
           PRIVATE_KEY: 'private-key'
           LOG_LEVEL: 'info'
