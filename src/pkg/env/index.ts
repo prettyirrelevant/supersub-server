@@ -6,6 +6,7 @@ const zEnv = z.object({
   ALCHEMY_WEBHOOK_SIGNING_KEY: z.string().min(1),
   DATABASE_URL: z.string().url().min(1),
   PORT: z.coerce.number().default(3456),
+  ALCHEMY_AUTH_TOKEN: z.string().min(1),
   PRIVY_APP_SECRET: z.string().min(1),
   ALCHEMY_API_KEY: z.string().min(1),
   REDIS_URL: z.string().url().min(1),

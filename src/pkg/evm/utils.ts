@@ -12,7 +12,7 @@ import { ALCHEMY_WEBHOOK_ID } from '~/pkg/evm';
 import { config } from '~/pkg/env';
 
 export const getAlchemyClient = (network: Network) => {
-  return new Alchemy({ authToken: config.ALCHEMY_WEBHOOK_SIGNING_KEY, apiKey: config.ALCHEMY_API_KEY, network });
+  return new Alchemy({ authToken: config.ALCHEMY_AUTH_TOKEN, apiKey: config.ALCHEMY_API_KEY, network });
 };
 
 export const getEvmHttpClient = (chain: Chain) => {
