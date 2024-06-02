@@ -145,7 +145,7 @@ application.get(
   async (req: Request, res: Response<SuccessResponse>) => {
     const address = req.auth.address;
     const products = await prisma.product.findMany({
-      include: { creator: true, plans: true },
+      include: { _count: { select: { subscriptions: true } }, creator: true, plans: true, token: true },
       where: { creatorAddress: address },
     });
     return res.status(StatusCodes.OK).json({ data: { products: products } });
