@@ -25,6 +25,20 @@ application.get('/', async (req: Request, res: Response<SuccessResponse>) => {
   return successResponse(res, { ping: 'pong' }, StatusCodes.OK);
 });
 
+application.get(
+  '/api/api-keys',
+  privyAuthenticationMiddleware,
+  async (req: Request, res: Response<SuccessResponse>, next: NextFunction) => {
+    const address = req.auth.address;
+    const apiKey = await prisma.apiKey.findFirst({ where: { accountAddress: address } });
+    if (!apiKey) {
+      next(new ApiError(StatusCodes.NOT_FOUND, { message: 'apiKey does not exist for this user' }));
+      return;
+    }
+    return res.status(StatusCodes.OK).json({ data: { publicKey: apiKey.publicKey, secretKey: apiKey.secretKey } });
+  },
+);
+
 application.post(
   '/api/api-keys',
   privyAuthenticationMiddleware,

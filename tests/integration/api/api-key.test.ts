@@ -35,10 +35,17 @@ describe('API Keys', async () => {
   });
 
   it('GET /api/api-keys', async () => {
-    const response = await request(application).get('/api/api-keys').expect('Content-Type', /json/).expect(404);
+    const accounts = await createFakeAccounts(1);
+    const accessToken = await createPrivyAccessToken({ privyDid: accounts[0].metadata?.privyDid, privateKey });
+    const response = await request(application)
+      .get('/api/api-keys')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect('Content-Type', /json/)
+      .expect(404);
+
     expect(response.body).toStrictEqual({
       error: {
-        message: 'The page you requested cannot be found. Perhaps you mistyped the URL or the page has been moved.',
+        message: 'apiKey does not exist for this user',
         code: 'Not Found',
       },
     });
