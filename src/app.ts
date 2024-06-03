@@ -145,6 +145,7 @@ application.get(
     const skip = parseInt(offset as string);
     const take = parseInt(limit as string);
     const transactions = await prisma.transaction.findMany({
+      include: { subscription: true, token: true },
       where: where,
       take: take,
       skip: skip,
@@ -172,7 +173,7 @@ application.get(
     }
 
     const subscriptions = await prisma.subscription.findMany({
-      include: { product: true, plan: true },
+      include: { product: { include: { token: true } }, plan: true },
       where: where,
     });
 
