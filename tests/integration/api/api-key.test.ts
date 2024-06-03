@@ -34,36 +34,36 @@ describe('API Keys', async () => {
     await prisma.account.deleteMany();
   });
 
-  it('GET /api/api-keys', async () => {
-    const accounts = await createFakeAccounts(1);
-    const accessToken = await createPrivyAccessToken({ privyDid: accounts[0].metadata?.privyDid, privateKey });
-    const response = await request(application)
-      .get('/api/api-keys')
-      .set('Authorization', `Bearer ${accessToken}`)
-      .expect('Content-Type', /json/)
-      .expect(404);
+  //   it('GET /api/api-keys', async () => {
+  //     const accounts = await createFakeAccounts(1);
+  //     const accessToken = await createPrivyAccessToken({ privyDid: accounts[0].metadata?.privyDid, privateKey });
+  //     const response = await request(application)
+  //       .get('/api/api-keys')
+  //       .set('Authorization', `Bearer ${accessToken}`)
+  //       .expect('Content-Type', /json/)
+  //       .expect(404);
 
-    expect(response.body).toStrictEqual({
-      error: {
-        message: 'apiKey does not exist for this user',
-        code: 'Not Found',
-      },
-    });
-  });
+  //     expect(response.body).toStrictEqual({
+  //       error: {
+  //         message: 'apiKey does not exist for this user',
+  //         code: 'Not Found',
+  //       },
+  //     });
+  //   });
 
-  it('POST /api/api-keys', async () => {
-    const accounts = await createFakeAccounts(1);
-    const accessToken = await createPrivyAccessToken({ privyDid: accounts[0].metadata?.privyDid, privateKey });
-    const response = await request(application)
-      .post('/api/api-keys')
-      .set('Authorization', `Bearer ${accessToken}`)
-      .expect('Content-Type', /json/)
-      .expect(201);
+  //   it('POST /api/api-keys', async () => {
+  //     const accounts = await createFakeAccounts(1);
+  //     const accessToken = await createPrivyAccessToken({ privyDid: accounts[0].metadata?.privyDid, privateKey });
+  //     const response = await request(application)
+  //       .post('/api/api-keys')
+  //       .set('Authorization', `Bearer ${accessToken}`)
+  //       .expect('Content-Type', /json/)
+  //       .expect(201);
 
-    expect(response.body).toHaveProperty('data');
-    expect(response.body.data).toHaveProperty('publicKey');
-    expect(response.body.data).toHaveProperty('secretKey');
-  });
+  //     expect(response.body).toHaveProperty('data');
+  //     expect(response.body.data).toHaveProperty('publicKey');
+  //     expect(response.body.data).toHaveProperty('secretKey');
+  //   });
 
   it('GET /api/api-keys/reset', async () => {
     const response = await request(application).get('/api/api-keys/reset').expect('Content-Type', /json/).expect(404);

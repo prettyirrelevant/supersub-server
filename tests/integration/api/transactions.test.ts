@@ -44,6 +44,7 @@ describe('Transactions', async () => {
     await prisma.plan.deleteMany();
     await prisma.product.deleteMany();
     await prisma.token.deleteMany();
+    await prisma.apiKey.deleteMany();
     await prisma.account.deleteMany();
   });
 
