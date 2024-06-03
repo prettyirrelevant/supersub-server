@@ -9,7 +9,7 @@ This is the server component of [Supersub](https://github.com/prettyirrelevant/s
 - **Product Management**: Manage products, plans, and associated tokens for subscription providers.
 - **Transaction History**: Retrieve transaction history for deposits and withdrawals related to subscriptions and also integrate with Alchemy's webhook system to handle address activity events.
 - **API Key Management**: Generate and manage API keys for secure access to the server's functionalities.
-- **API Documentation**: Detailed documentation for the server's API endpoints is available [here](https://supersubv1.apidocumentation.com/).
+- **API Documentation**: Detailed documentation for the server's API endpoints is available [here](https://supersubv1.apidocumentation.com/reference).
 
 ## Technologies Used
 
