@@ -4,6 +4,7 @@ import { SUBSCRIPTION_PLUGIN_ADDRESS } from '~/pkg/evm';
 import { AlchemyWebhookEvent } from '~/utils';
 import { logger } from '~/pkg/logging';
 import { prisma } from '~/pkg/db';
+import dayjs from 'dayjs';
 
 const ModularAccountFactoryAddress = getAddress('0x0046000000000151008789797b54fdb500e2a61e');
 
@@ -48,6 +49,8 @@ export const handleAlchemyAddressActivityWebhook = async (webhook: AlchemyWebhoo
       await prisma.transaction.createMany({
         data: [
           {
+            createdAt: dayjs(webhook.createdAt).toDate(),
+            updatedAt: dayjs(webhook.createdAt).toDate(),
             onchainReference: activity.hash,
             narration: withdrawalNarration,
             recipient: toAddress,
@@ -58,6 +61,8 @@ export const handleAlchemyAddressActivityWebhook = async (webhook: AlchemyWebhoo
             amount,
           },
           {
+            createdAt: dayjs(webhook.createdAt).toDate(),
+            updatedAt: dayjs(webhook.createdAt).toDate(),
             onchainReference: activity.hash,
             narration: depositNarration,
             recipient: toAddress,
