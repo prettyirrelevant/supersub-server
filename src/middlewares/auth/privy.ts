@@ -4,6 +4,7 @@ import { polygonAmoy } from 'viem/chains';
 import { Network } from 'alchemy-sdk';
 
 import { getMultiOwnerModularAccountAddresses, addAddressesToWebhook } from '~/pkg/evm';
+import { generateApiKeyPair } from '~/utils';
 import { ApiError } from '~/pkg/errors';
 import { privy } from '~/pkg/privy';
 import { prisma } from '~/pkg/db';
@@ -48,6 +49,23 @@ export const privyAuthenticationMiddleware = async (req: Request, res: Response,
           eoaAddress: privyAddress,
         },
       });
+    }
+
+    try {
+      const { secretKey, publicKey } = generateApiKeyPair();
+      await prisma.apiKey.upsert({
+        create: {
+          account: {
+            connect: { smartAccountAddress: account.smartAccountAddress },
+          },
+          publicKey: publicKey,
+          secretKey: secretKey,
+        },
+        where: { accountAddress: account.smartAccountAddress },
+        update: {},
+      });
+    } catch (error) {
+      // do nothing
     }
 
     req.auth = {
