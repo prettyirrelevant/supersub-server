@@ -8,7 +8,6 @@ import cors from 'cors';
 
 import { combinedAuthenticationMiddleware, privyAuthenticationMiddleware } from '~/middlewares/auth';
 import { type SuccessResponse, successResponse } from '~/pkg/responses';
-import { alchemyWebhookMiddleware } from '~/middlewares/alchemyWebhook';
 import { requestLoggerMiddleware } from '~/middlewares/requestLogger';
 import { AlchemyWebhookEvent, generateApiKeyPair } from '~/utils';
 import { bullBoardMiddleware } from '~/middlewares/bullBoard';
@@ -209,7 +208,7 @@ application.get(
   },
 );
 
-application.post('/_webhook', alchemyWebhookMiddleware, async (req: Request, res: Response<SuccessResponse>) => {
+application.post('/_webhook', async (req: Request, res: Response<SuccessResponse>) => {
   const webhookEvent = req.body as AlchemyWebhookEvent;
   await queue.add('alchemy-address-activity', { webhook: webhookEvent });
 

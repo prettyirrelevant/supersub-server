@@ -19,7 +19,7 @@ export default async function (job: Job) {
   } else if (job.name === 'enrich-tokens') {
     await enrichERC20Tokens(polygonAmoy);
   } else if (job.name === 'index-subscription-plugin-events') {
-    await indexSubscriptionPluginEvents(polygonAmoy);
+    await indexSubscriptionPluginEvents(polygonAmoy, Network.MATIC_AMOY);
   } else if (job.name === 'upcoming-subscriptions-renewal-reminders') {
     await notifyUsersForUpcomingSubscriptionRenewal();
   } else if (job.name === 'renew-subscriptions') {
