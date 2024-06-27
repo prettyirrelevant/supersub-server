@@ -14,8 +14,8 @@ const addJobsToQueue = async () => {
   // Runs every 12 hours (0th minute of every 12th hour)
   await queue.add('renew-subscriptions', {}, { repeat: { pattern: '0 */12 * * *' } });
 
-  // Runs every minute
-  await queue.add('fetch-smart-accounts', {}, { repeat: { pattern: '* * * * *' } });
+  // Runs every five(5) minutes
+  await queue.add('fetch-smart-accounts', {}, { repeat: { every: 300_000 } });
 
   // Runs every 30 seconds
   await queue.add('index-subscription-plugin-events', {}, { repeat: { every: 30_000 } });
