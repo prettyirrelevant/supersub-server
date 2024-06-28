@@ -5,6 +5,7 @@ export {
   getEvmHttpClient,
   getAlchemyClient,
   bytes32ToText,
+  formatBalance,
   hexToString,
 } from './utils';
 export {

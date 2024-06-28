@@ -11,6 +11,9 @@ const addJobsToQueue = async () => {
   // Runs every minute
   await queue.add('enrich-tokens', {}, { repeat: { pattern: '* * * * *' } });
 
+  // Runs every 6 hours (0th minute of every 6th hour)
+  await queue.add('update-account-balance', {}, { repeat: { pattern: '0 */6 * * *' } });
+
   // Runs every 12 hours (0th minute of every 12th hour)
   await queue.add('renew-subscriptions', {}, { repeat: { pattern: '0 */12 * * *' } });
 

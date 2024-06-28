@@ -7,6 +7,7 @@ import { logger } from '~/pkg/logging';
 import { indexSubscriptionPluginEvents } from './handlers/indexSubscriptionPluginEvents';
 import { notifyUsersForUpcomingSubscriptionRenewal } from './handlers/emailNotification';
 import { handleAlchemyAddressActivityWebhook } from './handlers/addressActivityWebhook';
+import { updateHourlyBalances } from './handlers/updateAccountBalances';
 import { fetchSmartAccounts } from './handlers/fetchSmartAccounts';
 import { renewSubscriptions } from './handlers/renewSubscriptions';
 import { enrichERC20Tokens } from './handlers/enrichTokens';
@@ -26,6 +27,8 @@ export default async function (job: Job) {
     await renewSubscriptions(polygonAmoy);
   } else if (job.name === 'alchemy-address-activity') {
     await handleAlchemyAddressActivityWebhook(job.data.webhook);
+  } else if (job.name === 'update-account-balance') {
+    await updateHourlyBalances(polygonAmoy);
   } else {
     logger.warn(`Unrecognized job name. Skipping...`, { jobName: job.name });
   }

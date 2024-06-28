@@ -26,10 +26,25 @@ model Account {
 
   apiKey                  ApiKey?
   products                Product[]
-  createdSubscriptions    Subscription[] @relation("creator")
-  subscribedSubscriptions Subscription[] @relation("subscriber")
+  createdSubscriptions    Subscription[]   @relation("creator")
+  subscribedSubscriptions Subscription[]   @relation("subscriber")
+  AccountBalance          AccountBalance[]
 
   @@index([smartAccountAddress], type: Hash)
+}
+
+// Account Balances
+model AccountBalance {
+  id        Int      @id @default(autoincrement())
+  balances  Json
+  timestamp DateTime @default(now())
+
+  accountAddress String
+  account        Account @relation(fields: [accountAddress], references: [smartAccountAddress])
+
+  @@unique([accountAddress, timestamp])
+  @@index([accountAddress])
+  @@index([timestamp])
 }
 
 // Product Types

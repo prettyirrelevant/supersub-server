@@ -2,7 +2,7 @@ import {
   getDefaultMultiOwnerModularAccountFactoryAddress,
   MultiOwnerModularAccountFactoryAbi,
 } from '@alchemy/aa-accounts';
-import { createPublicClient, fromHex, http } from 'viem';
+import { createPublicClient, hexToBigInt, fromHex, http } from 'viem';
 import { Alchemy, Network } from 'alchemy-sdk';
 import { getChain } from '@alchemy/aa-core';
 import { type Chain } from 'viem/chains';
@@ -10,6 +10,8 @@ import dayjs from 'dayjs';
 
 import { ALCHEMY_WEBHOOK_ID } from '~/pkg/evm';
 import { config } from '~/pkg/env';
+
+import { ERC20Abi } from './abis';
 
 export const getAlchemyClient = (network: Network) => {
   return new Alchemy({ authToken: config.ALCHEMY_AUTH_TOKEN, apiKey: config.ALCHEMY_API_KEY, network });
@@ -50,6 +52,19 @@ export const solidityTimestampToDateTime = (ts: bigint): Date => {
 };
 
 export const bytes32ToText = (hex: `0x${string}`): string => fromHex(hex, { to: 'string', size: 32 });
+
+export const formatBalance = async (chain: Chain, data: { contractAddress: string; tokenBalance: string }) => {
+  const client = getEvmHttpClient(chain);
+
+  const decimals = (await client.readContract({
+    address: data.contractAddress as `0x${string}`,
+    functionName: 'decimals',
+    abi: ERC20Abi,
+  })) as number;
+  const bigIntValue = hexToBigInt(data.tokenBalance as `0x${string}`);
+  const balance = Number(bigIntValue) / Math.pow(10, decimals);
+  return [data.contractAddress, balance.toString()];
+};
 
 export const addAddressesToWebhook = async (addresses: `0x${string}`[], network: Network) => {
   if (config.ENVIRONMENT === 'development') return;
