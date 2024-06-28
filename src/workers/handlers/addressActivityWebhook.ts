@@ -1,15 +1,24 @@
 import { zeroAddress, getAddress, fromHex } from 'viem';
+import { baseSepolia, polygonAmoy } from 'viem/chains';
 
-import { SUBSCRIPTION_PLUGIN_ADDRESS } from '~/pkg/evm';
+import { getDeploymentVarsByChain } from '~/pkg/evm/constants';
 import { AlchemyWebhookEvent } from '~/utils';
 import { logger } from '~/pkg/logging';
 import { prisma } from '~/pkg/db';
 
 const ModularAccountFactoryAddress = getAddress('0x0046000000000151008789797b54fdb500e2a61e');
 
+const getChainID = (name: string) => {
+  const mapping: Record<string, number> = {
+    BASE_SEPOLIA: baseSepolia.id,
+    MATIC_AMOY: polygonAmoy.id,
+  };
+  return mapping[name];
+};
+
 export const handleAlchemyAddressActivityWebhook = async (webhook: AlchemyWebhookEvent) => {
   try {
-    if (webhook.type !== 'ADDRESS_ACTIVITY' || webhook.event.network !== 'MATIC_AMOY') {
+    if (webhook.type !== 'ADDRESS_ACTIVITY') {
       logger.info(`Ignoring webhook event of type ${webhook.type} for network ${webhook.event.network}`);
       return;
     }
@@ -19,13 +28,15 @@ export const handleAlchemyAddressActivityWebhook = async (webhook: AlchemyWebhoo
         logger.warn(`No handler found for activity with category: ${activity.category}`);
         continue;
       }
+      console.log(activity);
 
       const toAddress = getAddress(activity.toAddress);
       const fromAddress = getAddress(activity.fromAddress);
-
+      const chainId = getChainID(webhook.event.network);
+      const susbscriptionPluginAddr = getDeploymentVarsByChain(String(chainId)).subscriptionPlugin;
       if (
-        [ModularAccountFactoryAddress, SUBSCRIPTION_PLUGIN_ADDRESS].includes(toAddress) ||
-        [ModularAccountFactoryAddress, SUBSCRIPTION_PLUGIN_ADDRESS].includes(fromAddress)
+        [ModularAccountFactoryAddress].includes(toAddress) ||
+        [ModularAccountFactoryAddress, susbscriptionPluginAddr].includes(fromAddress)
       ) {
         logger.info(`Ignoring activity involving Modular Account Factory or Subscription Plugin`);
         continue;
@@ -36,33 +47,47 @@ export const handleAlchemyAddressActivityWebhook = async (webhook: AlchemyWebhoo
         continue;
       }
 
-      const tokenAddress =
-        activity.asset === 'MATIC' ? zeroAddress : getAddress(activity.rawContract.address as `0x${string}`);
+      const tokenAddress = activity.rawContract.address
+        ? getAddress(activity.rawContract.address as `0x${string}`)
+        : zeroAddress;
       const amount = fromHex(activity.rawContract.rawValue as `0x${string}`, 'bigint').toString();
 
       const withdrawalNarration = `Sent ${activity.value} ${activity.asset} to ${toAddress}`;
       const depositNarration = `Received ${activity.value} ${activity.asset} from ${fromAddress}`;
 
-      await prisma.token.createMany({ data: [{ address: tokenAddress }], skipDuplicates: true });
+      await prisma.token.createMany({
+        data: [
+          {
+            onchainReference: `${chainId}:${tokenAddress}`,
+            address: tokenAddress,
+            chainId: chainId,
+          },
+        ],
+        skipDuplicates: true,
+      });
 
       await prisma.transaction.createMany({
         data: [
           {
-            onchainReference: activity.hash,
+            tokenOnchainReference: `${chainId}:${tokenAddress}`,
+            onchainReference: `${chainId}:${activity.hash}`,
             narration: withdrawalNarration,
             recipient: toAddress,
             sender: fromAddress,
             type: 'WITHDRAWAL',
             status: 'SUCCESS',
+            chainId: chainId,
             tokenAddress,
             amount,
           },
           {
-            onchainReference: activity.hash,
+            tokenOnchainReference: `${chainId}:${tokenAddress}`,
+            onchainReference: `${chainId}:{activity.hash}`,
             narration: depositNarration,
             recipient: toAddress,
             sender: fromAddress,
             status: 'SUCCESS',
+            chainId: chainId,
             type: 'DEPOSIT',
             tokenAddress,
             amount,

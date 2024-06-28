@@ -33,13 +33,11 @@ export const createFakeProducts = async (n: number, accounts: Account[]) => {
     payloads.push({
       creatorAddress: faker.helpers.arrayElement(accounts).smartAccountAddress,
       type: faker.helpers.arrayElement(Object.values(ProductType)),
-      destinationChain: faker.number.int({ max: 100_000, min: 1 }),
-      tokenAddress: faker.helpers.arrayElement(TEST_TOKENS),
-      onchainReference: faker.number.int({ max: 100_000 }),
-      receivingAddress: faker.finance.ethereumAddress(),
       description: faker.commerce.productDescription(),
+      onchainReference: faker.string.alphanumeric(),
       name: faker.commerce.productName(),
       logoUrl: faker.image.url(),
+      chainId: 5,
     });
   }
 
@@ -51,9 +49,14 @@ export const createFakePlans = async (n: number, products: Product[]) => {
   for (let i = 0; i < n; i++) {
     payloads.push({
       productOnchainReference: faker.helpers.arrayElement(products).onchainReference,
+      tokenOnchainReference: faker.helpers.arrayElement(TEST_TOKENS),
+      destinationChain: faker.number.int({ max: 100_000, min: 1 }),
+      tokenAddress: faker.helpers.arrayElement(TEST_TOKENS),
       chargeInterval: faker.number.int({ max: 12, min: 1 }),
-      onchainReference: faker.number.int({ max: 99999 }),
+      receivingAddress: faker.finance.ethereumAddress(),
+      onchainReference: faker.string.alphanumeric(),
       price: faker.finance.amount(),
+      chainId: 5,
     });
   }
 
@@ -68,9 +71,13 @@ export const createFakeSubscriptions = async (n: number, accounts: Account[], pr
       subscriberAddress: faker.helpers.arrayElement(accounts).smartAccountAddress,
       creatorAddress: faker.helpers.arrayElement(accounts).smartAccountAddress,
       planOnchainReference: faker.helpers.arrayElement(plans).onchainReference,
-      onchainReference: faker.number.int({ max: 99999 }),
+      paymentTokenOnchainReference: faker.finance.ethereumAddress(),
+      paymentTokenAddress: faker.finance.ethereumAddress(),
+      beneficiaryAddress: faker.finance.ethereumAddress(),
+      onchainReference: faker.string.alphanumeric(),
       subscriptionExpiry: faker.date.soon(),
       lastChargeDate: faker.date.recent(),
+      chainId: 5,
     });
   }
 
@@ -79,7 +86,7 @@ export const createFakeSubscriptions = async (n: number, accounts: Account[], pr
 
 export const createFakeTokens = async () => {
   return await prisma.token.createManyAndReturn({
-    data: TEST_TOKENS.map((token) => ({ address: token })),
+    data: TEST_TOKENS.map((token) => ({ onchainReference: `5${token}`, address: token, chainId: 5 })),
     skipDuplicates: true,
   });
 };
@@ -91,12 +98,14 @@ export const createFakeTransactions = async (n: number, accounts: Account[]) => 
     payloads.push({
       status: faker.helpers.arrayElement(Object.values(TransactionStatus)),
       type: faker.helpers.arrayElement(Object.values(TransactionType)),
+      tokenOnchainReference: faker.helpers.arrayElement(TEST_TOKENS),
       onchainReference: faker.string.hexadecimal({ length: 64 }),
-      tokenAddress: faker.helpers.arrayElement(TEST_TOKENS),
       narration: faker.finance.transactionDescription(),
+      tokenAddress: faker.finance.ethereumAddress(),
       recipient: recipient.smartAccountAddress,
       sender: sender.smartAccountAddress,
       amount: faker.finance.amount(),
+      chainId: 5,
     });
   }
 

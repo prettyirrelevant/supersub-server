@@ -8,6 +8,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -25,9 +26,6 @@ model Account {
   updatedAt DateTime @updatedAt
 
   apiKey                  ApiKey?
-  products                Product[]
-  createdSubscriptions    Subscription[] @relation("creator")
-  subscribedSubscriptions Subscription[] @relation("subscriber")
 
   @@index([smartAccountAddress], type: Hash)
 }
@@ -45,19 +43,15 @@ model Product {
   description      String
   logoUrl          String
   type             ProductType
-  destinationChain Int
-  onchainReference Int         @unique
-  receivingAddress String
+  onchainReference String         @unique
   isActive         Boolean     @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  creatorAddress String
-  creator        Account @relation(fields: [creatorAddress], references: [smartAccountAddress])
+  chainId Int
 
-  tokenAddress String
-  token        Token  @relation(fields: [tokenAddress], references: [address])
+  creatorAddress String
 
   plans         Plan[]
   subscriptions Subscription[]
@@ -68,14 +62,24 @@ model Plan {
   id               Int     @id @default(autoincrement())
   chargeInterval   Int
   price            Decimal
-  onchainReference Int     @unique
+  onchainReference String     @unique
   isActive         Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  productOnchainReference Int
+  productOnchainReference String
   product                 Product @relation(fields: [productOnchainReference], references: [onchainReference])
+
+  chainId Int
+
+  receivingAddress String
+  destinationChain Int
+
+  tokenAddress          String
+  tokenOnchainReference String
+  token        Token  @relation(fields: [tokenOnchainReference], references: [onchainReference])
+
 
   subscription Subscription[]
 }
@@ -102,13 +106,15 @@ model Transaction {
   sender           String?
   recipient        String?
   type             TransactionType
-  onchainReference String
+  onchainReference String            
+  chainId          Int
   status           TransactionStatus
 
   tokenAddress String
-  token        Token  @relation(fields: [tokenAddress], references: [address])
+  tokenOnchainReference String
+  token        Token  @relation(fields: [tokenOnchainReference], references: [onchainReference])
 
-  subscriptionOnchainReference Int?
+  subscriptionOnchainReference String?
   subscription                 Subscription? @relation(fields: [subscriptionOnchainReference], references: [onchainReference])
 
   createdAt DateTime @default(now())
@@ -118,7 +124,7 @@ model Transaction {
 // Subscriptions
 model Subscription {
   id                 Int       @id @default(autoincrement())
-  onchainReference   Int       @unique
+  onchainReference   String       @unique
   subscriptionExpiry DateTime?
   lastChargeDate     DateTime?
   isActive           Boolean   @default(true)
@@ -126,35 +132,44 @@ model Subscription {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  creatorAddress String
-  creator        Account @relation("creator", fields: [creatorAddress], references: [smartAccountAddress])
+  chainId Int
 
-  planOnchainReference Int
+  creatorAddress String
+
+  planOnchainReference String
   plan                 Plan @relation(fields: [planOnchainReference], references: [onchainReference])
 
-  productOnchainReference Int
+  productOnchainReference String
   product                 Product @relation(fields: [productOnchainReference], references: [onchainReference])
 
   subscriberAddress String
-  subscriber        Account @relation(name: "subscriber", fields: [subscriberAddress], references: [smartAccountAddress])
+
+  beneficiaryAddress String
+  paymentTokenAddress       String
+  paymentTokenOnchainReference       String
+  paymentToken        Token  @relation(fields: [paymentTokenOnchainReference], references: [onchainReference])
+
 
   transactions Transaction[]
 
-  @@unique([subscriberAddress, productOnchainReference])
 }
 
 // Tokens
 model Token {
   id       Int     @id @default(autoincrement())
-  address  String  @unique
+  onchainReference  String  @unique
   decimals Int?
   symbol   String?
+  address String
+
+  chainId  Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  products     Product[]
+  plans     Plan[]
   transactions Transaction[]
+  subscriptions Subscription[]
 }
 
 // API Keys

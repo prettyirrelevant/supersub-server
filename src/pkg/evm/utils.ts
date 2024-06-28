@@ -1,11 +1,19 @@
 import {
+  arbitrumSepolia,
+  optimismSepolia,
+  fraxtalTestnet,
+  baseSepolia,
+  polygonAmoy,
+  type Chain,
+  sepolia,
+} from 'viem/chains';
+import {
   getDefaultMultiOwnerModularAccountFactoryAddress,
   MultiOwnerModularAccountFactoryAbi,
 } from '@alchemy/aa-accounts';
 import { createPublicClient, fromHex, http } from 'viem';
 import { Alchemy, Network } from 'alchemy-sdk';
 import { getChain } from '@alchemy/aa-core';
-import { type Chain } from 'viem/chains';
 import dayjs from 'dayjs';
 
 import { ALCHEMY_WEBHOOK_ID } from '~/pkg/evm';
@@ -15,8 +23,30 @@ export const getAlchemyClient = (network: Network) => {
   return new Alchemy({ authToken: config.ALCHEMY_AUTH_TOKEN, apiKey: config.ALCHEMY_API_KEY, network });
 };
 
+const getTransportURL = (chainId: number) => {
+  switch (chainId) {
+    case baseSepolia.id:
+      return 'https://base-sepolia.g.alchemy.com/v2/GAG9zhOv7cSHQdF77ZD3L27aN4JGiwGm';
+    case optimismSepolia.id:
+      return '';
+    case fraxtalTestnet.id:
+      return '';
+    case arbitrumSepolia.id:
+      return '';
+    case polygonAmoy.id:
+      return '';
+    case sepolia.id:
+      return '';
+    default:
+      return 'https://base-sepolia.g.alchemy.com/v2/GAG9zhOv7cSHQdF77ZD3L27aN4JGiwGm';
+  }
+};
 export const getEvmHttpClient = (chain: Chain) => {
-  return createPublicClient({ transport: http(), chain });
+  const transportURL = getTransportURL(chain.id);
+  return createPublicClient({
+    transport: http(transportURL),
+    chain,
+  });
 };
 
 export const getMultiOwnerModularAccountAddresses = async (chain: Chain, owners: `0x${string}`[]) => {

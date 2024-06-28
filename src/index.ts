@@ -6,6 +6,7 @@ import { config } from '~/pkg/env';
 import { application } from './app';
 
 const server = application.listen(config.PORT, () => {
+  console.log('Listening on port', config.PORT || process.env.PORT);
   logger.debug(`server is running on port ${config.PORT}`);
 });
 

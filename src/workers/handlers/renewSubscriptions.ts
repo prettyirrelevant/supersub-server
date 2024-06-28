@@ -48,7 +48,7 @@ export const renewSubscriptions = async (chain: Chain) => {
     logger.info('Renewing subscriptions', { numSubscriptions: subscriptionsForRenewal.length });
     const chargeResults = await Promise.allSettled(
       subscriptionsForRenewal.map(
-        async (sub) => await chargeUser(chain, sub.subscriberAddress as `0x${string}`, BigInt(sub.onchainReference)),
+        async (sub) => await chargeUser(chain, sub.beneficiaryAddress as `0x${string}`, BigInt(sub.plan.id)),
       ),
     );
 
@@ -68,7 +68,7 @@ export const renewSubscriptions = async (chain: Chain) => {
   }
 };
 
-const chargeUser = async (chain: Chain, subscriber: `0x${string}`, subscriptionId: bigint) => {
+const chargeUser = async (chain: Chain, beneficiary: `0x${string}`, planId: bigint) => {
   try {
     const publicClient = getEvmHttpClient(chain);
     const account = privateKeyToAccount(config.PRIVATE_KEY as `0x${string}`);
@@ -80,15 +80,15 @@ const chargeUser = async (chain: Chain, subscriber: `0x${string}`, subscriptionI
 
     const { request } = await publicClient.simulateContract({
       address: SUBSCRIPTION_PLUGIN_ADDRESS,
-      args: [subscriber, subscriptionId],
+      args: [planId, beneficiary],
       abi: SubscriptionPluginAbi,
       functionName: 'charge',
       account,
     });
 
-    logger.info('Charging user for subscription', { subscriptionId, subscriber });
+    logger.info('Charging user for subscription', { beneficiary, planId });
     await walletClient.writeContract(request);
   } catch (error) {
-    logger.error(error, { description: 'Error charging user for subscription', subscriptionId, subscriber });
+    logger.error(error, { description: 'Error charging user for subscription', beneficiary, planId });
   }
 };

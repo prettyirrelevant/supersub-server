@@ -4,40 +4,41 @@ import { type Log } from 'viem';
 import dayjs from 'dayjs';
 
 import {
-  SUBSCRIPTION_PLUGIN_INIT_BLOCK,
   solidityTimestampToDateTime,
-  SUBSCRIPTION_PLUGIN_ADDRESS,
   SubscriptionPluginAbi,
   getEvmHttpClient,
   bytes32ToText,
   CHUNK_SIZE,
 } from '~/pkg/evm';
+import { getDeploymentVarsByChain } from '~/pkg/evm/constants';
 import { logger } from '~/pkg/logging';
 import { getRanges } from '~/utils';
 import { prisma } from '~/pkg/db';
 
-import { fetchSmartAccounts } from './fetchSmartAccounts';
-
-export const indexSubscriptionPluginEvents = async (chain: Chain, alchemyNetwork: Network) => {
+export const indexSubscriptionPluginEvents = async (chain: Chain, alchemyNetwork?: Network) => {
   try {
     logger.info('Indexing subscription plugin events');
+    console.log(chain.name, alchemyNetwork);
 
-    await fetchSmartAccounts(chain, alchemyNetwork);
-
+    // await fetchSmartAccounts(chain, alchemyNetwork);
+    if (!getDeploymentVarsByChain(chain.id)) {
+      return;
+    }
     const client = getEvmHttpClient(chain);
     const lastQueriedBlockCache = await prisma.cache.upsert({
       create: {
-        value: SUBSCRIPTION_PLUGIN_INIT_BLOCK.toString(),
-        key: 'last-queried-block',
+        value: getDeploymentVarsByChain(chain.id).initBlock.toString(),
+        key: `last-queried-block-${chain.name}`,
       },
       where: {
-        key: 'last-queried-block',
+        key: `last-queried-block-${chain.name}`,
       },
       update: {},
     });
 
     const lastQueriedBlock = BigInt(lastQueriedBlockCache.value);
     const latestBlock = await client.getBlockNumber();
+
     logger.info('Last queried block', { lastQueriedBlock: lastQueriedBlock.toString() });
     logger.info('Latest block', { latestBlock: latestBlock.toString() });
 
@@ -48,7 +49,7 @@ export const indexSubscriptionPluginEvents = async (chain: Chain, alchemyNetwork
       ranges.map(
         async ([start, end]) =>
           await client.getContractEvents({
-            address: SUBSCRIPTION_PLUGIN_ADDRESS,
+            address: getDeploymentVarsByChain(chain.id).subscriptionPlugin as `0x${string}`,
             abi: SubscriptionPluginAbi,
             fromBlock: start,
             toBlock: end,
@@ -56,17 +57,18 @@ export const indexSubscriptionPluginEvents = async (chain: Chain, alchemyNetwork
       ),
     );
     const events = eventPromises.map((entry) => (entry.status === 'fulfilled' ? entry.value : [])).flat();
+    console.log(events.length, events, getDeploymentVarsByChain(chain.id));
     logger.info('Total events', { numEvents: events.length });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const eventHandlers: Record<string, (event: any) => Promise<void>> = {
-      SubscriptionEndTimeUpdated: handleSubscriptionEndTimeUpdated,
+    const eventHandlers: Record<string, (event: any, chain: Chain) => Promise<void>> = {
+      UserSubscriptionChanged: handleUserSubscriptionChanged,
       SubscriptionCharged: handleSubscriptionCharged,
+      PlanUnsubscribed: handlePlanUnSubscribed,
       ProductCreated: handleProductCreated,
       ProductUpdated: handleProductUpdated,
-      UnSubscribed: handleUnSubscribed,
+      PlanSubscribed: handlePlanSubscribed,
       PlanCreated: handlePlanCreated,
       PlanUpdated: handlePlanUpdated,
-      Subscribed: handleSubscribed,
     };
 
     for (const event of events) {
@@ -74,8 +76,9 @@ export const indexSubscriptionPluginEvents = async (chain: Chain, alchemyNetwork
       if (handler) {
         try {
           logger.info(`Handling event: ${event.eventName}`, { event });
-          await handler(event);
+          await handler(event, chain);
         } catch (error) {
+          console.log(error);
           logger.error(`Error handling event ${event.eventName}`, { error, event });
         }
       } else {
@@ -84,83 +87,94 @@ export const indexSubscriptionPluginEvents = async (chain: Chain, alchemyNetwork
     }
 
     await prisma.cache.update({
+      where: {
+        key: `last-queried-block-${chain.name}`,
+      },
       data: {
         value: latestBlock.toString(),
       },
-      where: {
-        key: 'last-queried-block',
-      },
     });
   } catch (error) {
+    //@ts-expect-error Error type
     logger.error(error, { description: 'Error indexing subscription plugin events' });
   }
 };
 
 const handleProductCreated = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'ProductCreated'>,
+  chain: Chain,
 ) => {
   await prisma.product.create({
     data: {
-      token: {
-        connectOrCreate: {
-          create: {
-            address: event.args.chargeToken,
-          },
-          where: {
-            address: event.args.chargeToken,
-          },
-        },
-      },
-      creator: {
-        connect: { smartAccountAddress: event.args.provider },
-      },
       type: event.args.productType === 0 ? 'RECURRING' : 'SUBSCRIPTION',
-      destinationChain: Number(event.args.destinationChain),
-      onchainReference: Number(event.args.productId),
-      receivingAddress: event.args.receivingAddress,
+      onchainReference: `${chain.id}:${event.args.productId}`,
       name: bytes32ToText(event.args.name),
       description: event.args.description,
-      isActive: event.args.isActive,
-      logoUrl: event.args.logoUrl,
+      creatorAddress: event.args.provider,
+      logoUrl: event.args.logoURL,
+      chainId: chain.id,
+      isActive: true,
     },
   });
 };
 
 const handleProductUpdated = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'ProductUpdated'>,
+  chain: Chain,
 ) => {
   await prisma.product.update({
+    where: { onchainReference: `${chain.id}:${event.args.productId}` },
     data: {
-      destinationChain: Number(event.args.destinationChain),
-      receivingAddress: event.args.receivingAddress,
       isActive: event.args.isActive,
     },
-    where: { onchainReference: Number(event.args.productId) },
   });
 };
 
 const handlePlanCreated = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'PlanCreated'>,
+  chain: Chain,
 ) => {
   await prisma.plan.create({
     data: {
-      product: {
-        connect: { onchainReference: Number(event.args.productId) },
+      token: {
+        connectOrCreate: {
+          create: {
+            onchainReference: `${chain.id}:${event.args.tokenAddress}`,
+            address: event.args.tokenAddress,
+            chainId: chain.id,
+          },
+          where: {
+            onchainReference: `${chain.id}:${event.args.tokenAddress}`,
+            chainId: chain.id,
+          },
+        },
       },
+      product: {
+        connect: { onchainReference: `${chain.id}:${event.args.productId}` },
+      },
+      destinationChain: Number(event.args.destinationChain),
+      onchainReference: `${chain.id}:${event.args.planId}`,
       chargeInterval: Number(event.args.chargeInterval),
-      onchainReference: Number(event.args.planId),
+      receivingAddress: event.args.receivingAddress,
+      tokenAddress: event.args.tokenAddress,
       price: event.args.price.toString(),
-      isActive: event.args.isActive,
+      chainId: chain.id,
+      isActive: true,
     },
   });
 };
 
 const handlePlanUpdated = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'PlanUpdated'>,
+  chain: Chain,
 ) => {
-  await prisma.product.update({
-    where: { onchainReference: Number(event.args.planId) },
-    data: { isActive: event.args.isActive },
+  await prisma.plan.update({
+    data: {
+      destinationChain: Number(event.args.destinationChain),
+      receivingAddress: event.args.receivingAddress,
+      isActive: event.args.isActive,
+    },
+    where: { onchainReference: `${chain.id}:${event.args.planId}` },
   });
 };
 
@@ -173,31 +187,55 @@ const handlePlanUpdated = async (
 //   });
 // };
 
-const handleSubscribed = async (
-  event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'Subscribed'>,
+const handlePlanSubscribed = async (
+  event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'PlanSubscribed'>,
+  chain: Chain,
 ) => {
   const futureDate = dayjs.unix(16754083200); // 01/12/2500
+  const plan = await prisma.plan.findUnique({
+    where: {
+      onchainReference: `${chain.id}:${event.args.planId}`,
+    },
+    include: {
+      product: true,
+    },
+  });
   await prisma.subscription.create({
     data: {
+      paymentToken: {
+        connectOrCreate: {
+          create: {
+            onchainReference: `${chain.id}:${event.args.paymentToken}`,
+            address: event.args.paymentToken,
+            chainId: chain.id,
+          },
+          where: {
+            onchainReference: `${chain.id}:${event.args.paymentToken}`,
+          },
+        },
+      },
       subscriptionExpiry:
         event.args.endTime === 0n ? futureDate.toDate() : solidityTimestampToDateTime(event.args.endTime),
-      subscriber: { connect: { smartAccountAddress: event.args.subscriber } },
-      product: { connect: { onchainReference: Number(event.args.product) } },
-      creator: { connect: { smartAccountAddress: event.args.provider } },
-      plan: { connect: { onchainReference: Number(event.args.plan) } },
-      onchainReference: Number(event.args.subscriptionId),
+      onchainReference: `${chain.id}:${event.args.planId}:${event.args.beneficiary}`,
+      product: { connect: { onchainReference: plan?.product.onchainReference } },
+      plan: { connect: { onchainReference: plan?.onchainReference } },
+      creatorAddress: plan?.product.creatorAddress || '',
+      paymentTokenAddress: event.args.paymentToken,
+      beneficiaryAddress: event.args.beneficiary,
+      subscriberAddress: event.args.subscriber,
+      chainId: chain.id,
       isActive: true,
     },
   });
 };
 
-const handleUnSubscribed = async (
-  event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'UnSubscribed'>,
+const handlePlanUnSubscribed = async (
+  event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'PlanUnsubscribed'>,
+  chain: Chain,
 ) => {
   await prisma.subscription.update({
     where: {
-      onchainReference: Number(event.args.subscriptionId),
-      subscriberAddress: event.args.user,
+      onchainReference: `${chain.id}:${event.args.planId}:${event.args.beneficiary}`,
     },
     data: {
       isActive: false,
@@ -205,26 +243,29 @@ const handleUnSubscribed = async (
   });
 };
 
-const handleSubscriptionEndTimeUpdated = async (
-  event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'SubscriptionEndTimeUpdated'>,
+const handleUserSubscriptionChanged = async (
+  event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'UserSubscriptionChanged'>,
+  chain: Chain,
 ) => {
   await prisma.subscription.update({
-    where: {
-      subscriberAddress: event.args.subscriber,
-      onchainReference: Number(event.args.id),
-    },
     data: {
+      paymentTokenOnchainReference: `${chain.id}:${event.args.paymentToken}`,
       subscriptionExpiry: solidityTimestampToDateTime(event.args.endTime),
+      paymentTokenAddress: event.args.paymentToken,
+    },
+    where: {
+      onchainReference: `${chain.id}:${event.args.planId}:${event.args.beneficiary}`,
     },
   });
 };
 
 const handleSubscriptionCharged = async (
   event: Log<bigint, number, false, undefined, true, typeof SubscriptionPluginAbi, 'SubscriptionCharged'>,
+  chain: Chain,
 ) => {
   const subscription = await prisma.subscription.findUnique({
-    where: { onchainReference: Number(event.args.subscriptionId) },
-    include: { product: true },
+    where: { onchainReference: `${chain.id}:${event.args.planId}:${event.args.beneficiary}` },
+    include: { paymentToken: true, product: true, plan: true },
   });
 
   await prisma.transaction.createMany({
@@ -233,41 +274,45 @@ const handleSubscriptionCharged = async (
         narration:
           subscription?.product.type === 'SUBSCRIPTION'
             ? 'Subscription fee charged'
-            : `Recurring payment made to ${subscription?.product.receivingAddress}`,
+            : `Recurring payment made to ${subscription?.plan.receivingAddress}`,
         recipient:
           subscription?.product.type === 'SUBSCRIPTION'
             ? subscription?.creatorAddress
-            : subscription?.product.receivingAddress,
-        subscriptionOnchainReference: Number(event.args.subscriptionId),
-        tokenAddress: subscription?.product.tokenAddress as string,
-        onchainReference: event.transactionHash,
-        amount: event.args.amount.toString(),
-        sender: event.args.subscriber,
+            : subscription?.plan.receivingAddress,
+        subscriptionOnchainReference: `${chain.id}:${event.args.planId}:${event.args.beneficiary}`,
+        tokenOnchainReference: `${chain.id}:${event.args.paymentToken}`,
+        onchainReference: `${chain.id}:${event.transactionHash}`,
+        amount: event.args.paymentAmount.toString(),
+        sender: subscription?.subscriberAddress,
+        tokenAddress: event.args.paymentToken,
         type: 'WITHDRAWAL',
         status: 'SUCCESS',
+        chainId: chain.id,
       },
       {
         narration:
           subscription?.product.type === 'SUBSCRIPTION'
             ? 'Subscription fee received'
-            : `Recurring payment received from ${event.args.subscriber}`,
+            : `Recurring payment received from ${event.args.beneficiary}`,
         recipient:
           subscription?.product.type === 'SUBSCRIPTION'
             ? subscription?.creatorAddress
-            : subscription?.product.receivingAddress,
-        subscriptionOnchainReference: Number(event.args.subscriptionId),
-        tokenAddress: subscription?.product.tokenAddress as string,
-        onchainReference: event.transactionHash,
-        amount: event.args.amount.toString(),
-        sender: event.args.subscriber,
+            : subscription?.plan.receivingAddress,
+        subscriptionOnchainReference: `${chain.id}:${event.args.planId}:${event.args.beneficiary}`,
+        tokenOnchainReference: subscription?.plan.tokenOnchainReference as string,
+        onchainReference: `${chain.id}:${event.transactionHash}`,
+        tokenAddress: subscription?.plan.tokenAddress as string,
+        amount: subscription?.plan.price.toString() || '',
+        sender: subscription?.subscriberAddress,
         status: 'SUCCESS',
+        chainId: chain.id,
         type: 'DEPOSIT',
       },
     ],
   });
 
   await prisma.subscription.update({
+    where: { onchainReference: `${chain.id}:${event.args.planId}:${event.args.beneficiary}` },
     data: { lastChargeDate: solidityTimestampToDateTime(event.args.timestamp) },
-    where: { onchainReference: Number(event.args.subscriptionId) },
   });
 };

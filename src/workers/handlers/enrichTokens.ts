@@ -8,7 +8,7 @@ import { prisma } from '~/pkg/db';
 export const enrichERC20Tokens = async (chain: Chain) => {
   try {
     logger.info('Fetching tokens with missing data from the database');
-    const tokens = await prisma.token.findMany({ where: { decimals: null } });
+    const tokens = await prisma.token.findMany({ where: { chainId: chain.id, decimals: null } });
 
     if (tokens.length === 0) {
       logger.info('No tokens found with missing data');
@@ -17,7 +17,10 @@ export const enrichERC20Tokens = async (chain: Chain) => {
 
     // todo: if we eventually do multi-chain support, this will need to change.
     try {
-      await prisma.token.update({ data: { symbol: 'MATIC', decimals: 18 }, where: { address: zeroAddress } });
+      await prisma.token.update({
+        data: { decimals: chain.nativeCurrency.decimals, symbol: chain.nativeCurrency.symbol },
+        where: { onchainReference: `${chain.id}:${zeroAddress}` },
+      });
     } catch (e) {
       // do nothing
     }
@@ -53,7 +56,7 @@ export const enrichERC20Tokens = async (chain: Chain) => {
       dbActions.push(
         prisma.token.update({
           data: { decimals: Number(decimalsResult.result), symbol: symbolResult.result as string },
-          where: { address: tokens[i / 2].address },
+          where: { onchainReference: tokens[i / 2].onchainReference },
         }),
       );
     }

@@ -5,7 +5,7 @@ const zEnv = z.object({
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('debug'),
   ALCHEMY_WEBHOOK_SIGNING_KEY: z.string().min(1),
   DATABASE_URL: z.string().url().min(1),
-  PORT: z.coerce.number().default(3456),
+  PORT: z.coerce.number().default(8080),
   ALCHEMY_AUTH_TOKEN: z.string().min(1),
   PRIVY_APP_SECRET: z.string().min(1),
   ALCHEMY_API_KEY: z.string().min(1),

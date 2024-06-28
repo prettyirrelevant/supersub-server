@@ -1,3 +1,5 @@
+import { arbitrumSepolia, optimismSepolia, polygonAmoy, baseSepolia, sepolia, base } from 'viem/chains';
+import { fraxtalSepolia } from '@alchemy/aa-core';
 import { ProductType } from '@prisma/client';
 import { formatUnits } from 'viem';
 import dayjs from 'dayjs';
@@ -6,6 +8,18 @@ import { logger } from '~/pkg/logging';
 import { resend } from '~/pkg/resend';
 import { prisma } from '~/pkg/db';
 import { chunks } from '~/utils';
+
+const getNetworkNameById = (chainId: string) => {
+  const mapping: Record<string, string> = {
+    [arbitrumSepolia.id]: arbitrumSepolia.name,
+    [optimismSepolia.id]: optimismSepolia.name,
+    [fraxtalSepolia.id]: fraxtalSepolia.name,
+    [polygonAmoy.id]: polygonAmoy.name,
+    [baseSepolia.id]: baseSepolia.name,
+    [sepolia.id]: sepolia.name,
+  };
+  return mapping[chainId];
+};
 
 export const notifyUsersForUpcomingSubscriptionRenewal = async () => {
   try {
@@ -30,9 +44,9 @@ export const notifyUsersForUpcomingSubscriptionRenewal = async () => {
         isActive: true,
       },
       include: {
-        subscriber: true,
+        plan: { include: { token: true } },
+        paymentToken: true,
         product: true,
-        plan: true,
       },
     });
 
@@ -41,16 +55,29 @@ export const notifyUsersForUpcomingSubscriptionRenewal = async () => {
       return;
     }
 
-    const subscribersToNotify = upcomingRenewals.filter((sub) => {
-      if (!sub.lastChargeDate) return true;
-      return sub.lastChargeDate < in24Hours.subtract(sub.plan.chargeInterval, 'seconds').toDate();
-    });
+    const subscribersToNotify = [];
+
+    for (const renewals of upcomingRenewals) {
+      const subscriber = await prisma.account.findUnique({
+        where: { smartAccountAddress: renewals.subscriberAddress },
+      });
+      if (subscriber) {
+        subscribersToNotify.push({
+          ...renewals,
+          subscriber,
+        });
+      }
+    }
 
     logger.info('Preparing email payloads', { numSubscribers: subscribersToNotify.length });
     const payloads = subscribersToNotify.map((subscription) => ({
       text: getEmailBodyTemplate({
-        amount: formatUnits(BigInt(subscription.plan.price.toString()), subscription.product.token.decimals as number),
-        recipientAddress: subscription.product.receivingAddress,
+        amount: formatUnits(BigInt(subscription.plan.price.toString()), subscription.plan.token.decimals as number),
+        paymentChain: getNetworkNameById(subscription.chainId.toString()),
+        paymentTokenSymbol: subscription.paymentToken.symbol || '',
+        planTokenSymbol: subscription.plan.token.symbol || '',
+        recipientAddress: subscription.plan.receivingAddress,
+        productDescription: subscription.product.description,
         email: subscription.subscriber.emailAddress,
         productName: subscription.product.name,
         type: subscription.product.type,
@@ -69,7 +96,11 @@ export const notifyUsersForUpcomingSubscriptionRenewal = async () => {
 };
 
 const getEmailBodyTemplate = (options: {
+  paymentTokenSymbol: string;
+  productDescription: string;
   recipientAddress: string;
+  planTokenSymbol: string;
+  paymentChain: string;
   productName: string;
   type: ProductType;
   amount: string;
@@ -82,7 +113,8 @@ Hello ${options.email},
 This is a friendly reminder that your subscription to ${options.productName} is due for renewal sometime tomorrow.
 
 Subscription: ${options.productName}
-Renewal Amount: ${options.amount}
+Renewal Amount: ${options.amount} ${options.planTokenSymbol}
+Payment Info: Paid in ${options.paymentTokenSymbol} on ${options.paymentChain}
 
 To ensure uninterrupted access, please make sure you have sufficient funds in your wallet before the renewal date.
 
@@ -100,9 +132,10 @@ Hello ${options.email},
 
 This is a friendly reminder that your recurring payment to ${options.recipientAddress} is scheduled for sometime tomorrow.
 
-Payment Description: ${options.productName}
+Payment Description: ${options.productDescription}
 Recipient: ${options.recipientAddress}
-Amount: ${options.amount}
+Amount: ${options.amount} ${options.planTokenSymbol}
+Payment Info: Paid in ${options.paymentTokenSymbol}  on ${options.paymentChain}
 
 Please ensure you have sufficient funds in your crypto wallet to avoid any failures in your recurring payment.
 

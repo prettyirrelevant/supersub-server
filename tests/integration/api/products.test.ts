@@ -28,7 +28,7 @@ describe('Products', async () => {
 
   beforeEach(async () => {
     const privy = new PrivyClient('privy-app-id', 'privy-app-secret');
-    privy.verifyAuthToken.mockImplementation(
+    privy.verifyAuthToken. (  
       async (token: string) => await verifyPrivyAccessToken({ verificationKey: publicKey, token }),
     );
   });

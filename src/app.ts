@@ -6,7 +6,6 @@ import { formatEther } from 'viem';
 import helmet from 'helmet';
 import cors from 'cors';
 
-import { combinedAuthenticationMiddleware, privyAuthenticationMiddleware } from '~/middlewares/auth';
 import { type SuccessResponse, successResponse } from '~/pkg/responses';
 import { alchemyWebhookMiddleware } from '~/middlewares/alchemyWebhook';
 import { requestLoggerMiddleware } from '~/middlewares/requestLogger';
@@ -16,6 +15,7 @@ import { handleError, ApiError } from '~/pkg/errors';
 import { getAlchemyClient } from '~/pkg/evm';
 import { prisma } from '~/pkg/db';
 
+import { privyAuthenticationMiddleware } from './middlewares/auth';
 import { queue } from './pkg/bullmq';
 
 export const application: Application = express();
@@ -30,33 +30,30 @@ application.get('/', async (req: Request, res: Response<SuccessResponse>) => {
   return successResponse(res, { ping: 'pong' }, StatusCodes.OK);
 });
 
-application.get(
-  '/api/balances',
-  privyAuthenticationMiddleware,
-  async (req: Request, res: Response<SuccessResponse>, next: NextFunction) => {
-    const address = req.auth.address;
-    const alchemyClient = getAlchemyClient(Network.MATIC_AMOY);
+application.get('/api/balances', async (req: Request, res: Response<SuccessResponse>, next: NextFunction) => {
+  const address = req.query.address as string;
+  const network = req.query.network as Network;
+  const alchemyClient = getAlchemyClient(network);
 
-    try {
-      const nativeBalance = await alchemyClient.core.getBalance(address);
-      const tokenBalances = await alchemyClient.core.getTokensForOwner(address);
-      return successResponse(
-        res,
-        { nativeBalance: formatEther(nativeBalance.toBigInt()), tokenBalances },
-        StatusCodes.OK,
-      );
-    } catch (e) {
-      next(e);
-      return;
-    }
-  },
-);
+  try {
+    const nativeBalance = await alchemyClient.core.getBalance(address);
+    const tokenBalances = await alchemyClient.core.getTokensForOwner(address);
+    return successResponse(
+      res,
+      { nativeBalance: formatEther(nativeBalance.toBigInt()), tokenBalances },
+      StatusCodes.OK,
+    );
+  } catch (e) {
+    next(e);
+    return;
+  }
+});
 
 application.get(
   '/api/api-keys',
   privyAuthenticationMiddleware,
   async (req: Request, res: Response<SuccessResponse>, next: NextFunction) => {
-    const address = req.auth.address;
+    const address = req.query.address as string;
     const apiKey = await prisma.apiKey.findFirst({ where: { accountAddress: address } });
     if (!apiKey) {
       next(new ApiError(StatusCodes.NOT_FOUND, { message: 'apiKey does not exist for this user' }));
@@ -70,7 +67,7 @@ application.post(
   '/api/api-keys',
   privyAuthenticationMiddleware,
   async (req: Request, res: Response<SuccessResponse>) => {
-    const address = req.auth.address;
+    const address = req.query.address as string;
     const apiKey = await prisma.apiKey.findFirst({ where: { accountAddress: address } });
     if (apiKey) {
       return res.status(StatusCodes.BAD_REQUEST).json({ data: { error: 'apiKey already exists for this user' } });
@@ -93,7 +90,7 @@ application.post(
   '/api/api-keys/reset',
   privyAuthenticationMiddleware,
   async (req: Request, res: Response<SuccessResponse>) => {
-    const address = req.auth.address;
+    const address = req.query.address as string;
     const { secretKey, publicKey } = generateApiKeyPair();
     await prisma.apiKey.upsert({
       create: {
@@ -113,104 +110,96 @@ application.post(
   },
 );
 
-application.get(
-  '/api/transactions',
-  privyAuthenticationMiddleware,
-  async (req: Request, res: Response<SuccessResponse>) => {
-    const address = req.auth.address;
-    const { offset = '0', limit = '10', reference, product } = req.query;
+application.get('/api/transactions', async (req: Request, res: Response<SuccessResponse>) => {
+  const address = req.query.address as string;
+  const chainId = Number(req.query.chainId);
+  const { offset = '0', limit = '10', reference, product } = req.query;
 
-    const where: Prisma.TransactionWhereInput = {
-      OR: [
-        {
-          AND: [{ sender: address }, { type: TransactionType.WITHDRAWAL }],
-        },
-        {
-          AND: [{ recipient: address }, { type: TransactionType.DEPOSIT }],
-        },
-      ],
+  const where: Prisma.TransactionWhereInput = {
+    OR: [
+      {
+        AND: [{ sender: address }, { type: TransactionType.WITHDRAWAL }],
+      },
+      {
+        AND: [{ recipient: address }, { type: TransactionType.DEPOSIT }],
+      },
+    ],
+  };
+
+  if (reference) {
+    where.subscriptionOnchainReference = reference as string;
+  }
+  if (product) {
+    where.subscription = {
+      product: {
+        name: product as string,
+      },
     };
+  }
 
-    if (reference) {
-      where.subscriptionOnchainReference = parseInt(reference as string);
-    }
-    if (product) {
-      where.subscription = {
-        product: {
-          name: product as string,
-        },
-      };
-    }
+  where.chainId = chainId;
 
-    const skip = parseInt(offset as string);
-    const take = parseInt(limit as string);
-    const transactions = await prisma.transaction.findMany({
-      include: { subscription: true, token: true },
-      where: where,
-      take: take,
-      skip: skip,
-    });
-    return successResponse(res, { transactions }, StatusCodes.OK);
-  },
-);
+  const skip = parseInt(offset as string);
+  const take = parseInt(limit as string);
+  const transactions = await prisma.transaction.findMany({
+    include: { subscription: true, token: true },
+    where: where,
+    take: take,
+    skip: skip,
+  });
+  return successResponse(res, { transactions }, StatusCodes.OK);
+});
 
-application.get(
-  '/api/subscriptions',
-  privyAuthenticationMiddleware,
-  async (req: Request, res: Response<SuccessResponse>) => {
-    const address = req.auth.address;
-    const { isActive } = req.query;
+application.get('/api/subscriptions', async (req: Request, res: Response<SuccessResponse>) => {
+  const address = req.query.address as string;
+  const chainId = Number(req.query.chainId);
 
-    const where: Prisma.SubscriptionWhereInput = {
-      subscriberAddress: address,
-    };
-    if (isActive) {
-      where.isActive = ['true', '1'].includes(isActive.toString().toLowerCase())
-        ? true
-        : ['false', '0'].includes(isActive.toString().toLowerCase())
-          ? false
-          : undefined;
-    }
+  const { isActive } = req.query;
 
-    const subscriptions = await prisma.subscription.findMany({
-      include: { product: { include: { token: true } }, plan: true },
-      where: where,
-    });
+  const where: Prisma.SubscriptionWhereInput = {
+    subscriberAddress: address,
+    chainId,
+  };
+  if (isActive) {
+    where.isActive = ['true', '1'].includes(isActive.toString().toLowerCase())
+      ? true
+      : ['false', '0'].includes(isActive.toString().toLowerCase())
+        ? false
+        : undefined;
+  }
 
-    return successResponse(res, { subscriptions }, StatusCodes.OK);
-  },
-);
+  const subscriptions = await prisma.subscription.findMany({
+    include: { plan: { include: { token: true } }, paymentToken: true, product: true },
+    where: where,
+  });
 
-application.get(
-  '/api/products',
-  combinedAuthenticationMiddleware,
-  async (req: Request, res: Response<SuccessResponse>) => {
-    const address = req.auth.address;
-    const products = await prisma.product.findMany({
-      include: { _count: { select: { subscriptions: true } }, creator: true, plans: true, token: true },
-      where: { creatorAddress: address },
-    });
+  return successResponse(res, { subscriptions }, StatusCodes.OK);
+});
 
-    return successResponse(res, { products }, StatusCodes.OK);
-  },
-);
+application.get('/api/products', async (req: Request, res: Response<SuccessResponse>) => {
+  const address = req.query.address as string;
+  const chainId = Number(req.query.chainId);
+  const products = await prisma.product.findMany({
+    include: { _count: { select: { subscriptions: true } }, plans: true },
+    where: { creatorAddress: address, chainId },
+  });
 
-application.get(
-  '/api/products/:reference',
-  combinedAuthenticationMiddleware,
-  async (req: Request, res: Response<SuccessResponse>) => {
-    const address = req.auth.address;
-    const product = await prisma.product.findUnique({
-      include: { _count: { select: { subscriptions: true } }, creator: true, plans: true, token: true },
-      where: { onchainReference: Number(req.params.reference), creatorAddress: address },
-    });
+  return successResponse(res, { products }, StatusCodes.OK);
+});
 
-    return successResponse(res, { product }, StatusCodes.OK);
-  },
-);
+application.get('/api/products/:reference', async (req: Request, res: Response<SuccessResponse>) => {
+  const address = req.query.address as string;
+  const product = await prisma.product.findUnique({
+    where: { onchainReference: req.params.reference, creatorAddress: address },
+    include: { _count: { select: { subscriptions: true } }, plans: true },
+  });
+
+  return successResponse(res, { product }, StatusCodes.OK);
+});
 
 application.post('/_webhook', alchemyWebhookMiddleware, async (req: Request, res: Response<SuccessResponse>) => {
   const webhookEvent = req.body as AlchemyWebhookEvent;
+  console.log(webhookEvent);
   await queue.add('alchemy-address-activity', { webhook: webhookEvent });
 
   return successResponse(res, {}, StatusCodes.OK);
