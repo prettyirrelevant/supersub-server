@@ -52,6 +52,42 @@ application.get(
 );
 
 application.get(
+  '/api/balances/latest',
+  privyAuthenticationMiddleware,
+  async (req: Request, res: Response<SuccessResponse>) => {
+    const address = req.auth.address;
+    const balances = await prisma.accountBalance.findFirst({
+      where: { accountAddress: address },
+      orderBy: { timestamp: 'desc' },
+    });
+    return successResponse(res, { balances }, StatusCodes.OK);
+  },
+);
+
+application.get(
+  'api/balances/historical',
+  privyAuthenticationMiddleware,
+  async (req: Request, res: Response<SuccessResponse>) => {
+    const address = req.auth.address;
+    const balances = await prisma.accountBalance.groupBy({
+      orderBy: {
+        _max: {
+          timestamp: 'desc',
+        },
+      },
+      where: {
+        accountAddress: address,
+      },
+      _max: {
+        timestamp: true,
+      },
+      by: ['balances'],
+    });
+    return successResponse(res, { balances }, StatusCodes.OK);
+  },
+);
+
+application.get(
   '/api/api-keys',
   privyAuthenticationMiddleware,
   async (req: Request, res: Response<SuccessResponse>, next: NextFunction) => {
