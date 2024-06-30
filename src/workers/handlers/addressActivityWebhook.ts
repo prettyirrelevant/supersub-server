@@ -10,7 +10,7 @@ const ModularAccountFactoryAddress = getAddress('0x0046000000000151008789797b54f
 
 export const handleAlchemyAddressActivityWebhook = async (webhook: AlchemyWebhookEvent) => {
   try {
-    if (webhook.type !== 'ADDRESS_ACTIVITY' || webhook.event.network !== 'MATIC_AMOY') {
+    if (webhook.type !== 'ADDRESS_ACTIVITY' || webhook.event.network !== 'BASE_SEPOLIA') {
       logger.info(`Ignoring webhook event of type ${webhook.type} for network ${webhook.event.network}`);
       return;
     }
@@ -38,7 +38,7 @@ export const handleAlchemyAddressActivityWebhook = async (webhook: AlchemyWebhoo
       }
 
       const tokenAddress =
-        activity.asset === 'MATIC' ? zeroAddress : getAddress(activity.rawContract.address as `0x${string}`);
+        activity.asset === 'ETH' ? zeroAddress : getAddress(activity.rawContract.address as `0x${string}`);
       const amount = fromHex(activity.rawContract.rawValue as `0x${string}`, 'bigint').toString();
 
       const withdrawalNarration = `Sent ${activity.value} ${activity.asset} to ${toAddress}`;

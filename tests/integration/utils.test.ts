@@ -1,4 +1,4 @@
-import { optimismSepolia, polygonAmoy, sepolia } from 'viem/chains';
+import { optimismSepolia, baseSepolia, sepolia } from 'viem/chains';
 import { describe, expect, it } from 'vitest';
 
 import { getMultiOwnerModularAccountAddresses } from '~/pkg/evm/utils';
@@ -23,7 +23,7 @@ describe('getMultiOwnerModularAccountAddresses', () => {
     };
 
     const amoyResult = await getMultiOwnerModularAccountAddresses(
-      polygonAmoy,
+      baseSepolia,
       Object.keys(expected) as `0x${string}`[],
     );
     const sepoliaResult = await getMultiOwnerModularAccountAddresses(

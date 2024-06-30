@@ -8,7 +8,7 @@ import { prisma } from '~/pkg/db';
 export const updateHourlyBalances = async (chain: Chain) => {
   try {
     logger.info('Checking for account balances to update');
-    const alchemyClient = getAlchemyClient(Network.MATIC_AMOY);
+    const alchemyClient = getAlchemyClient(Network.BASE_SEPOLIA);
     const accounts = await prisma.account.findMany();
 
     const balanceData = await Promise.all(

@@ -1,4 +1,4 @@
-import { arbitrumSepolia, optimismSepolia, polygonAmoy, sepolia } from 'viem/chains';
+import { arbitrumSepolia, optimismSepolia, baseSepolia, sepolia, polygonAmoy } from 'viem/chains';
 import { describe, expect, it } from 'vitest';
 
 import { solidityTimestampToDateTime, getEvmHttpClient, bytes32ToText, hexToString } from '~/pkg/evm/utils';
@@ -86,7 +86,7 @@ describe('hexToString', () => {
 
 describe('getEvmClient', () => {
   it('should return a public client with the correct transport and chain', () => {
-    const chains = [polygonAmoy, sepolia, optimismSepolia, arbitrumSepolia];
+    const chains = [baseSepolia, sepolia, optimismSepolia, arbitrumSepolia, polygonAmoy];
     chains.forEach((chain) => {
       const client = getEvmHttpClient(chain);
 

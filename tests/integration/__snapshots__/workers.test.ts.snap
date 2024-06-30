@@ -4,7 +4,7 @@ exports[`addressActivityWebhook > should process webhooks correctly and store co
 [
   {
     "amount": "1000000000000000",
-    "narration": "Sent 0.001 MATIC to 0x454082DCfa29f386ef348e13D636748A91567749",
+    "narration": "Sent 0.001 ETH to 0x454082DCfa29f386ef348e13D636748A91567749",
     "onchainReference": "0x204f7b0d1472a476b3ee5ae0b2aa94858e9585f893e759a47e3e30859b200c65",
     "recipient": "0x454082DCfa29f386ef348e13D636748A91567749",
     "sender": "0xDaDC3e4Fa2CF41BC4ea0aD0e627935A5c2DB433d",
@@ -15,7 +15,7 @@ exports[`addressActivityWebhook > should process webhooks correctly and store co
   },
   {
     "amount": "1000000000000000",
-    "narration": "Received 0.001 MATIC from 0xDaDC3e4Fa2CF41BC4ea0aD0e627935A5c2DB433d",
+    "narration": "Received 0.001 ETH from 0xDaDC3e4Fa2CF41BC4ea0aD0e627935A5c2DB433d",
     "onchainReference": "0x204f7b0d1472a476b3ee5ae0b2aa94858e9585f893e759a47e3e30859b200c65",
     "recipient": "0x454082DCfa29f386ef348e13D636748A91567749",
     "sender": "0xDaDC3e4Fa2CF41BC4ea0aD0e627935A5c2DB433d",
@@ -48,7 +48,7 @@ exports[`addressActivityWebhook > should process webhooks correctly and store co
   },
   {
     "amount": "10000000000000000",
-    "narration": "Sent 0.01 MATIC to 0x454082DCfa29f386ef348e13D636748A91567749",
+    "narration": "Sent 0.01 ETH to 0x454082DCfa29f386ef348e13D636748A91567749",
     "onchainReference": "0xb4b2ad8939bc015e39929810d1105bbff0716609e8fe246f7cfaf89f3397ed1a",
     "recipient": "0x454082DCfa29f386ef348e13D636748A91567749",
     "sender": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
@@ -59,7 +59,7 @@ exports[`addressActivityWebhook > should process webhooks correctly and store co
   },
   {
     "amount": "10000000000000000",
-    "narration": "Received 0.01 MATIC from 0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
+    "narration": "Received 0.01 ETH from 0x13EF7f422829C7139CEb4695762Ba87e86437e5C",
     "onchainReference": "0xb4b2ad8939bc015e39929810d1105bbff0716609e8fe246f7cfaf89f3397ed1a",
     "recipient": "0x454082DCfa29f386ef348e13D636748A91567749",
     "sender": "0x13EF7f422829C7139CEb4695762Ba87e86437e5C",

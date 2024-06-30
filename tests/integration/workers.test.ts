@@ -1,7 +1,7 @@
 import { beforeEach, afterEach, describe, expect, assert, it, vi } from 'vitest';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { PrivyClient } from '@privy-io/server-auth';
-import { polygonAmoy } from 'viem/chains';
+import { baseSepolia } from 'viem/chains';
 import { faker } from '@faker-js/faker';
 import { Network } from 'alchemy-sdk';
 
@@ -30,30 +30,20 @@ describe('enrichERC20Tokens', () => {
 
   it('should update the decimals of tokens with valid results', async () => {
     const tokensBefore = await prisma.token.findMany();
-    expect(tokensBefore).toHaveLength(4);
+    expect(tokensBefore).toHaveLength(2);
 
-    await enrichERC20Tokens(polygonAmoy);
+    await enrichERC20Tokens(baseSepolia);
 
     const tokensAfter = await prisma.token.findMany({ select: { decimals: true, address: true, symbol: true } });
-    expect(tokensAfter).toHaveLength(4);
+    expect(tokensAfter).toHaveLength(2);
     expect(tokensAfter).toContainEqual({
-      address: '0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582',
+      address: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
       symbol: 'USDC',
       decimals: 6,
     });
     expect(tokensAfter).toContainEqual({
-      address: '0x360ad4f9a9A8EFe9A8DCB5f461c4Cc1047E1Dcf9',
-      symbol: 'WMATIC',
-      decimals: 18,
-    });
-    expect(tokensAfter).toContainEqual({
-      address: '0x0Fd9e8d3aF1aaee056EB9e802c3A762a667b1904',
+      address: '0xE4aB69C077896252FAFBD49EFD26B5D171A32410',
       symbol: 'LINK',
-      decimals: 18,
-    });
-    expect(tokensAfter).toContainEqual({
-      address: '0xcab0EF91Bee323d1A617c0a027eE753aFd6997E4',
-      symbol: 'CCIP-BnM',
       decimals: 18,
     });
   });
@@ -104,7 +94,7 @@ describe('fetchSmartAccounts', () => {
   });
 
   it('should create new accounts for new wallets', async () => {
-    await fetchSmartAccounts(polygonAmoy, Network.MATIC_AMOY);
+    await fetchSmartAccounts(baseSepolia, Network.BASE_SEPOLIA);
 
     const createdAccounts = await prisma.account.findMany({
       select: {
@@ -133,7 +123,7 @@ describe('fetchSmartAccounts', () => {
       },
     });
 
-    await fetchSmartAccounts(polygonAmoy, Network.MATIC_AMOY);
+    await fetchSmartAccounts(baseSepolia, Network.BASE_SEPOLIA);
 
     const createdAccounts = await prisma.account.findMany({
       select: {
@@ -220,9 +210,9 @@ describe('indexSubscriptionPluginEvents', () => {
 
   it('should index all events properly', async ({ skip }) => {
     skip();
-    await indexSubscriptionPluginEvents(polygonAmoy);
+    await indexSubscriptionPluginEvents(baseSepolia, Network.BASE_SEPOLIA);
 
-    const client = getEvmHttpClient(polygonAmoy);
+    const client = getEvmHttpClient(baseSepolia);
     const latestBlock = await client.getBlockNumber();
 
     const products = await prisma.product.findMany({
@@ -305,11 +295,11 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'DELEGATECALL_0',
             blockNum: '0x76cbef',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0.001,
           },
         ],
-        network: 'MATIC_AMOY',
+        network: 'BASE_SEPOLIA',
       },
       createdAt: '2024-06-02T15:40:57.188Z',
       webhookId: 'wh_aehf1f0i7izifbim',
@@ -326,11 +316,11 @@ describe('addressActivityWebhook', () => {
             toAddress: '0x454082dcfa29f386ef348e13d636748a91567749',
             blockNum: '0x76cbef',
             category: 'external',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0.001,
           },
         ],
-        network: 'MATIC_AMOY',
+        network: 'BASE_SEPOLIA',
       },
       createdAt: '2024-06-02T15:40:57.214Z',
       webhookId: 'wh_aehf1f0i7izifbim',
@@ -370,7 +360,7 @@ describe('addressActivityWebhook', () => {
             value: 1,
           },
         ],
-        network: 'MATIC_AMOY',
+        network: 'BASE_SEPOLIA',
       },
       createdAt: '2024-06-02T16:00:11.422Z',
       webhookId: 'wh_aehf1f0i7izifbim',
@@ -388,7 +378,7 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'DELEGATECALL_2_0_0_1_0',
             blockNum: '0x76ce66',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0,
           },
           {
@@ -399,7 +389,7 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'DELEGATECALL_2_0_0_3_0',
             blockNum: '0x76ce66',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0.01,
           },
           {
@@ -410,7 +400,7 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'STATICCALL_2_0_0_1',
             blockNum: '0x76ce66',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0,
           },
           {
@@ -421,7 +411,7 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'DELEGATECALL_2_0_0_0_0',
             blockNum: '0x76ce66',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0,
           },
           {
@@ -432,7 +422,7 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'STATICCALL_2_0_0_0',
             blockNum: '0x76ce66',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0,
           },
           {
@@ -443,7 +433,7 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'DELEGATECALL_2_0_0_2_0',
             blockNum: '0x76ce66',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0,
           },
           {
@@ -454,7 +444,7 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'CALL_2_0_0_3',
             blockNum: '0x76ce66',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0.01,
           },
           {
@@ -465,11 +455,11 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'STATICCALL_2_0_0_2',
             blockNum: '0x76ce66',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0,
           },
         ],
-        network: 'MATIC_AMOY',
+        network: 'BASE_SEPOLIA',
       },
       createdAt: '2024-06-02T16:03:19.886Z',
       webhookId: 'wh_aehf1f0i7izifbim',
@@ -487,7 +477,7 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'CALL_2_0_0_0',
             blockNum: '0x76cfbd',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0,
           },
           {
@@ -498,7 +488,7 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'DELEGATECALL_2_0_0_0_0_0',
             blockNum: '0x76cfbd',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0,
           },
           {
@@ -509,7 +499,7 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'CALL_2_0_0_0_0',
             blockNum: '0x76cfbd',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0,
           },
           {
@@ -520,7 +510,7 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'CALL_0_0_0',
             blockNum: '0x76cfbd',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0,
           },
           {
@@ -531,7 +521,7 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'DELEGATECALL_2_0_0',
             blockNum: '0x76cfbd',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0,
           },
           {
@@ -542,7 +532,7 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'CALL_2_0',
             blockNum: '0x76cfbd',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0,
           },
           {
@@ -553,7 +543,7 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'STATICCALL_2_0_0_0_0_0_0',
             blockNum: '0x76cfbd',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0,
           },
           {
@@ -564,7 +554,7 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'CALL_2_0_0_0_0_0_1',
             blockNum: '0x76cfbd',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0,
           },
           {
@@ -575,7 +565,7 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'CALL_0',
             blockNum: '0x76cfbd',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0,
           },
           {
@@ -586,11 +576,11 @@ describe('addressActivityWebhook', () => {
             typeTraceAddress: 'DELEGATECALL_0_0',
             blockNum: '0x76cfbd',
             category: 'internal',
-            asset: 'MATIC',
+            asset: 'ETH',
             value: 0,
           },
         ],
-        network: 'MATIC_AMOY',
+        network: 'BASE_SEPOLIA',
       },
       createdAt: '2024-06-02T16:15:27.284Z',
       webhookId: 'wh_aehf1f0i7izifbim',
@@ -630,7 +620,7 @@ describe('addressActivityWebhook', () => {
             value: 0.2,
           },
         ],
-        network: 'MATIC_AMOY',
+        network: 'BASE_SEPOLIA',
       },
       createdAt: '2024-06-02T16:15:27.411Z',
       webhookId: 'wh_aehf1f0i7izifbim',

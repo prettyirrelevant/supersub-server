@@ -1,6 +1,6 @@
 import { NextFunction, Response, Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { polygonAmoy } from 'viem/chains';
+import { baseSepolia } from 'viem/chains';
 import { Network } from 'alchemy-sdk';
 
 import { getMultiOwnerModularAccountAddresses, addAddressesToWebhook } from '~/pkg/evm';
@@ -38,9 +38,9 @@ export const privyAuthenticationMiddleware = async (req: Request, res: Response,
     if (!account) {
       const privyUser = await privy.getUser(verifiedClaims.userId);
       const privyAddress = privyUser.wallet?.address as `0x${string}`;
-      const smartAccountAddresses = await getMultiOwnerModularAccountAddresses(polygonAmoy, [privyAddress]);
+      const smartAccountAddresses = await getMultiOwnerModularAccountAddresses(baseSepolia, [privyAddress]);
 
-      await addAddressesToWebhook(Object.values(smartAccountAddresses), Network.MATIC_AMOY);
+      await addAddressesToWebhook(Object.values(smartAccountAddresses), Network.BASE_SEPOLIA);
       account = await prisma.account.create({
         data: {
           smartAccountAddress: smartAccountAddresses[privyAddress],

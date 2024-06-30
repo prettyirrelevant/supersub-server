@@ -34,7 +34,7 @@ application.get(
   privyAuthenticationMiddleware,
   async (req: Request, res: Response<SuccessResponse>, next: NextFunction) => {
     const address = req.auth.address;
-    const alchemyClient = getAlchemyClient(Network.MATIC_AMOY);
+    const alchemyClient = getAlchemyClient(Network.BASE_SEPOLIA);
 
     try {
       const nativeBalance = await alchemyClient.core.getBalance(address);

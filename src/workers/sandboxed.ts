@@ -1,4 +1,4 @@
-import { polygonAmoy } from 'viem/chains';
+import { baseSepolia } from 'viem/chains';
 import { Network } from 'alchemy-sdk';
 import { Job } from 'bullmq';
 
@@ -16,19 +16,19 @@ export default async function (job: Job) {
   logger.info(`Starting job...`, { jobName: job.name, jobData: job.data });
 
   if (job.name === 'fetch-smart-accounts') {
-    await fetchSmartAccounts(polygonAmoy, Network.MATIC_AMOY);
+    await fetchSmartAccounts(baseSepolia, Network.BASE_SEPOLIA);
   } else if (job.name === 'enrich-tokens') {
-    await enrichERC20Tokens(polygonAmoy);
+    await enrichERC20Tokens(baseSepolia);
   } else if (job.name === 'index-subscription-plugin-events') {
-    await indexSubscriptionPluginEvents(polygonAmoy, Network.MATIC_AMOY);
+    await indexSubscriptionPluginEvents(baseSepolia, Network.BASE_SEPOLIA);
   } else if (job.name === 'upcoming-subscriptions-renewal-reminders') {
     await notifyUsersForUpcomingSubscriptionRenewal();
   } else if (job.name === 'renew-subscriptions') {
-    await renewSubscriptions(polygonAmoy);
+    await renewSubscriptions(baseSepolia);
   } else if (job.name === 'alchemy-address-activity') {
     await handleAlchemyAddressActivityWebhook(job.data.webhook);
   } else if (job.name === 'update-account-balance') {
-    await updateHourlyBalances(polygonAmoy);
+    await updateHourlyBalances(baseSepolia);
   } else {
     logger.warn(`Unrecognized job name. Skipping...`, { jobName: job.name });
   }

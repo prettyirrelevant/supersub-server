@@ -17,7 +17,7 @@ export const enrichERC20Tokens = async (chain: Chain) => {
 
     // todo: if we eventually do multi-chain support, this will need to change.
     try {
-      await prisma.token.update({ data: { symbol: 'MATIC', decimals: 18 }, where: { address: zeroAddress } });
+      await prisma.token.update({ data: { symbol: 'ETH', decimals: 18 }, where: { address: zeroAddress } });
     } catch (e) {
       // do nothing
     }

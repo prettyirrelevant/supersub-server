@@ -5,10 +5,8 @@ import * as jose from 'jose';
 import { prisma } from '~/pkg/db';
 
 export const TEST_TOKENS = [
-  '0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582', // USDC
-  '0x360ad4f9a9A8EFe9A8DCB5f461c4Cc1047E1Dcf9', // WMATIC
-  '0x0Fd9e8d3aF1aaee056EB9e802c3A762a667b1904', // LINK
-  '0xcab0EF91Bee323d1A617c0a027eE753aFd6997E4', // CCIP BnM
+  '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // USDC
+  '0xE4aB69C077896252FAFBD49EFD26B5D171A32410', // LINK
 ];
 
 export const createFakeAccounts = async (n: number) => {
