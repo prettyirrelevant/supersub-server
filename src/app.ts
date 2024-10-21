@@ -200,7 +200,7 @@ application.get('/api/products/:reference', async (req: Request, res: Response<S
 application.get('/api/plan/:reference', async (req: Request, res: Response<SuccessResponse>) => {
   const plan = await prisma.plan.findUnique({
     where: { onchainReference: req.params.reference },
-    include: { product: true },
+    include: { product: true, token: true },
   });
 
   return successResponse(res, { plan }, StatusCodes.OK);

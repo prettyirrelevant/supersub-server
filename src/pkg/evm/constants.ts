@@ -1,4 +1,4 @@
-import { baseSepolia, polygonAmoy } from 'viem/chains';
+import { baseSepolia } from 'viem/chains';
 import { getAddress } from 'viem';
 
 export const CHUNK_SIZE = 3000;
@@ -14,14 +14,9 @@ interface deploymentVars {
 export function getDeploymentVarsByChain(chainId: string | number) {
   const dict: Record<string, deploymentVars> = {
     [baseSepolia.id]: {
-      subscriptionPlugin: '0x7b5F4a4aB2E879a0dAB3B678D84a2832c6FB7f78',
-      tokenBridge: '0x8877bd8D5F89FAeDf7f189Bb3f9aAF5ab32B5862',
-      initBlock: 11719734,
-    },
-    [polygonAmoy.id]: {
-      subscriptionPlugin: '0x791ab50d4A494376b87426c0D09DED05861c31f9',
-      tokenBridge: '0x1F7B6e0A5331412cf28F2ea83804929A41a742F7',
-      initBlock: 8630864,
+      subscriptionPlugin: '0x05350fF2de37d4a01581022433406f40Dd6d8352',
+      tokenBridge: '0x7F07404723DF0AbFEf333Eefdd0BE60B1d24EF70',
+      initBlock: 16857883,
     },
   };
   return dict[String(chainId)];
