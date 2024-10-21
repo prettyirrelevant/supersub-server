@@ -1,5 +1,4 @@
 import { type Chain } from 'viem/chains';
-import { Network } from 'alchemy-sdk';
 import { type Log } from 'viem';
 import dayjs from 'dayjs';
 
@@ -15,10 +14,10 @@ import { logger } from '~/pkg/logging';
 import { getRanges } from '~/utils';
 import { prisma } from '~/pkg/db';
 
-export const indexSubscriptionPluginEvents = async (chain: Chain, alchemyNetwork?: Network) => {
+export const indexSubscriptionPluginEvents = async (chain: Chain) => {
   try {
     logger.info('Indexing subscription plugin events');
-    console.log(chain.name, alchemyNetwork);
+    // console.log(chain.name, alchemyNetwork);
 
     // await fetchSmartAccounts(chain, alchemyNetwork);
     if (!getDeploymentVarsByChain(chain.id)) {

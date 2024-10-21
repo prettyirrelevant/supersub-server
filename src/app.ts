@@ -197,6 +197,15 @@ application.get('/api/products/:reference', async (req: Request, res: Response<S
   return successResponse(res, { product }, StatusCodes.OK);
 });
 
+application.get('/api/plan/:reference', async (req: Request, res: Response<SuccessResponse>) => {
+  const plan = await prisma.plan.findUnique({
+    where: { onchainReference: req.params.reference },
+    include: { product: true },
+  });
+
+  return successResponse(res, { plan }, StatusCodes.OK);
+});
+
 application.post('/_webhook', alchemyWebhookMiddleware, async (req: Request, res: Response<SuccessResponse>) => {
   const webhookEvent = req.body as AlchemyWebhookEvent;
   console.log(webhookEvent);

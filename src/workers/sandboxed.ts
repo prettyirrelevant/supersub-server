@@ -1,5 +1,4 @@
-import { arbitrumSepolia, optimismSepolia, fraxtalTestnet, baseSepolia, polygonAmoy, sepolia } from 'viem/chains';
-import { Network } from 'alchemy-sdk';
+import { baseSepolia } from 'viem/chains';
 import { Job } from 'bullmq';
 
 import { logger } from '~/pkg/logging';
@@ -13,8 +12,8 @@ import { enrichERC20Tokens } from './handlers/enrichTokens';
 
 export default async function (job: Job) {
   logger.info(`Starting job...`, { jobName: job.name, jobData: job.data });
-  // const supportedChains = [polygonAmoy];
-  const supportedChains = [baseSepolia, sepolia, fraxtalTestnet, arbitrumSepolia, optimismSepolia, polygonAmoy];
+  //SUPPORTED CHAINS baseSepolia, sepolia, fraxtalTestnet, arbitrumSepolia, optimismSepolia, polygonAmoy];
+  const supportedChains = [baseSepolia];
 
   if (job.name === 'fetch-smart-accounts') {
     // await fetchSmartAccounts(polygonAmoy, Network.MATIC_AMOY);
@@ -24,7 +23,7 @@ export default async function (job: Job) {
     }
   } else if (job.name === 'index-subscription-plugin-events') {
     for (const chain of supportedChains) {
-      await indexSubscriptionPluginEvents(chain, Network.MATIC_AMOY);
+      await indexSubscriptionPluginEvents(chain);
     }
   } else if (job.name === 'upcoming-subscriptions-renewal-reminders') {
     await notifyUsersForUpcomingSubscriptionRenewal();
